@@ -44,7 +44,7 @@ npm install -g @shopify/cli
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/sveltekit-shopify-app.git my-shopify-app
+git clone https://github.com/yussufs/svelteshopifytemplate.git my-shopify-app
 cd my-shopify-app
 
 # Or use as a template on GitHub
@@ -290,6 +290,7 @@ For separate development and production apps, use multiple toml configuration fi
    ```
 
 Each config file stores:
+
 - `client_id` - Unique app identifier
 - `application_url` - App URL for that environment
 - `redirect_urls` - OAuth callback URLs
