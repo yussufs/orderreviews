@@ -29,7 +29,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 function isPublicRoute(pathname: string): boolean {
-	const publicRoutes = ['/auth', '/api/auth', '/webhooks', '/'];
+	const publicRoutes = ['/auth', '/webhooks', '/'];
 
 	// Check exact matches and prefix matches
 	return publicRoutes.some(

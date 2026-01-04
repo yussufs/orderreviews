@@ -87,3 +87,16 @@ After adding new queries, run `pnpm run graphql-codegen`.
 2. `hooks.server.ts` validates session tokens from Authorization header
 3. Valid sessions get `locals.shopify.admin` GraphQL client
 4. Invalid sessions redirect to OAuth at `/auth`
+
+## Code Style (Prettier)
+
+Follow these formatting conventions when generating code:
+
+- **Indentation**: Use tabs (not spaces)
+- **Quotes**: Single quotes for strings
+- **Semicolons**: Always use semicolons
+- **Trailing commas**: None
+- **Print width**: 100 characters
+- **Svelte**: Uses `prettier-plugin-svelte` for `.svelte` files
+
+Run `pnpm run format` to auto-format, or `pnpm run lint` to check formatting.

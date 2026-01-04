@@ -1,0 +1,16 @@
+# Dependencies
+node_modules
+
+# Build output
+build
+.svelte-kit
+
+# Generated files
+src/lib/types/admin*.ts
+
+# Package manager
+pnpm-lock.yaml
+package-lock.json
+
+# Shopify
+.shopify
