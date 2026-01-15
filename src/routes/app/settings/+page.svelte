@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Page, Card, Button, TextField, Select, Switch, Text, Divider, Icon, Checkbox } from '$lib/components';
+	import { Page, Card, Button, TextField, Select, Text, Divider, Icon, Checkbox } from '$lib/components';
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();

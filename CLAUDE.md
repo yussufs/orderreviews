@@ -55,6 +55,7 @@ Official Shopify MCP server for Shopify development:
 - **fetch_full_docs**: Retrieve full documentation pages from shopify.dev
 - **introspect_graphql_schema**: Explore Shopify GraphQL schemas
 - **validate_graphql_codeblocks**: Validate GraphQL queries against Shopify schemas
+- **validate_component_codeblocks**: Validate Polaris component usage (for Polaris-based projects)
 
 ### Context7 MCP
 Up-to-date documentation for any library:
@@ -75,6 +76,8 @@ Always use the `/shopify` skill for ANY question about:
 - Shopify app development patterns
 
 Invoke the skill immediately as the first action - do not use Shopify MCP tools directly without going through the skill.
+
+**Note:** This project uses custom Svelte components (not Polaris web components) for UI. See [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md) for available components.
 
 ## GraphQL Pattern
 
@@ -179,7 +182,24 @@ Full documentation: [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md)
 
 | Component | Description |
 |-----------|-------------|
+| `Page` | Main page container with header, actions, and aside layout |
+| `Card` | Content container with title, actions, and footer slots |
+| `Button` | Versatile button with variants, tones, and link support |
+| `TextField` | Text input with label, validation, prefix/suffix |
+| `Select` | Dropdown select input |
+| `Checkbox` | Checkbox input with label and help text |
+| `Switch` | Toggle switch for boolean settings |
+| `SearchField` | Search input with clear button |
+| `DataTable` | Table component with styling |
+| `Badge` | Status badge with color tones |
+| `Banner` | Alert/notification banner |
+| `Spinner` | Loading spinner |
 | `Skeleton` | Loading placeholder with shimmer animation |
+| `Text` | Typography component with variants |
+| `Link` | Styled link component |
+| `Divider` | Horizontal divider line |
+| `Icon` | SVG icon component |
+| `EmptyState` | Empty state placeholder |
 
 ## Code Style (Prettier)
 

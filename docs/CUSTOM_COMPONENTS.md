@@ -339,9 +339,10 @@ Status badge component.
 
 <Badge>Default</Badge>
 <Badge tone="success">Active</Badge>
-<Badge tone="warning">Pending</Badge>
-<Badge tone="critical">Error</Badge>
 <Badge tone="info">Info</Badge>
+<Badge tone="caution">Caution</Badge>
+<Badge tone="warning">Warning</Badge>
+<Badge tone="critical">Error</Badge>
 <Badge size="small">Small</Badge>
 ```
 
@@ -349,7 +350,7 @@ Status badge component.
 
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
-| `tone` | `'default' \| 'success' \| 'warning' \| 'critical' \| 'info'` | `'default'` | Color tone |
+| `tone` | `'default' \| 'success' \| 'info' \| 'caution' \| 'warning' \| 'critical'` | `'default'` | Color tone |
 | `size` | `'small' \| 'medium'` | `'medium'` | Badge size |
 
 #### Banner
@@ -556,29 +557,66 @@ Empty state placeholder with image and actions.
 
 ---
 
-## CSS Variables
+## CSS Variables (Polaris Design Tokens)
 
-The component library uses CSS custom properties defined in `src/lib/styles/shopify.css`. Key variables include:
+The component library uses CSS custom properties defined in `src/lib/styles/shopify.css`, based on Shopify's Polaris design tokens.
 
-### Colors
+### Background Colors
+- `--color-bg` - Page background
 - `--color-bg-surface` - Card/surface background
-- `--color-bg-fill` - Primary button background
+- `--color-bg-surface-hover`, `--color-bg-surface-active`, `--color-bg-surface-selected`
+- `--color-bg-surface-secondary`, `--color-bg-surface-tertiary`
+- `--color-bg-surface-success`, `--color-bg-surface-info`, `--color-bg-surface-caution`, `--color-bg-surface-warning`, `--color-bg-surface-critical`
+
+### Fill Colors
+- `--color-bg-fill` - Primary fill (white)
+- `--color-bg-fill-brand`, `--color-bg-fill-brand-hover` - Brand fills (dark)
+- `--color-bg-fill-success`, `--color-bg-fill-critical`, `--color-bg-fill-warning`, `--color-bg-fill-info`, `--color-bg-fill-caution`
+
+### Text Colors
 - `--color-text` - Primary text
 - `--color-text-secondary` - Subdued text
-- `--color-border` - Border color
-- `--color-border-focus` - Focus ring color
+- `--color-text-disabled`, `--color-text-inverse`
+- `--color-text-success`, `--color-text-critical`, `--color-text-warning`, `--color-text-caution`, `--color-text-info`
+- `--color-text-link`, `--color-text-link-hover`
 
-### Spacing
-- `--space-100` through `--space-1600` - Spacing scale
+### Border Colors
+- `--color-border` - Default border
+- `--color-border-hover`, `--color-border-focus`, `--color-border-disabled`
+- `--color-border-success`, `--color-border-critical`, `--color-border-warning`, `--color-border-caution`, `--color-border-info`
+
+### Icon Colors
+- `--color-icon`, `--color-icon-hover`, `--color-icon-secondary`, `--color-icon-disabled`
+- `--color-icon-success`, `--color-icon-critical`, `--color-icon-warning`, `--color-icon-caution`, `--color-icon-info`
+
+### Spacing Scale
+- `--space-0` (0) through `--space-3200` (8rem)
+- Common: `--space-100` (0.25rem), `--space-200` (0.5rem), `--space-300` (0.75rem), `--space-400` (1rem), `--space-600` (1.5rem)
 
 ### Typography
-- `--font-size-xs` through `--font-size-2xl` - Font size scale
-- `--font-weight-regular`, `--font-weight-medium`, `--font-weight-semibold`, `--font-weight-bold`
+- **Font sizes**: `--font-size-275` (0.6875rem) through `--font-size-1000` (2.5rem)
+- **Aliases**: `--font-size-xs`, `--font-size-sm`, `--font-size-md`, `--font-size-lg`, `--font-size-xl`, `--font-size-2xl`
+- **Weights**: `--font-weight-regular` (400), `--font-weight-medium` (500), `--font-weight-semibold` (600), `--font-weight-bold` (700)
+- **Line heights**: `--line-height-300` through `--line-height-1200`, plus `--line-height-tight`, `--line-height-normal`
 
-### Other
-- `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl` - Border radius
-- `--shadow-card`, `--shadow-md` - Box shadows
-- `--duration-fast`, `--duration-base` - Animation durations
+### Border Radius
+- `--radius-0` through `--radius-full` (pill)
+- Aliases: `--radius-sm`, `--radius-md`, `--radius-lg`, `--radius-xl`
+
+### Shadows
+- `--shadow-100` through `--shadow-600`
+- `--shadow-card` (alias for `--shadow-200`)
+- `--shadow-button`, `--shadow-button-primary`, `--shadow-button-primary-hover`
+- Aliases: `--shadow-xs`, `--shadow-sm`, `--shadow-md`, `--shadow-lg`
+
+### Motion
+- **Durations**: `--duration-50` through `--duration-500`
+- **Aliases**: `--duration-fast` (100ms), `--duration-base` (200ms), `--duration-slow` (300ms)
+- **Easing**: `--ease`, `--ease-in`, `--ease-out`, `--ease-in-out`, `--ease-linear`
+
+### Z-Index
+- `--z-index-1` through `--z-index-5`
+- Aliases: `--z-sticky`, `--z-modal`, `--z-toast`
 
 ---
 
