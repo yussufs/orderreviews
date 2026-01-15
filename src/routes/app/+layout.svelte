@@ -3,11 +3,15 @@
 	import type { Snippet } from 'svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import '$lib/styles/shopify.css';
 
 	let { data, children }: { data: LayoutData; children: Snippet } = $props();
 
 	onMount(() => {
-		// Handle Polaris navigation events for SvelteKit
+		// Hide App Bridge's loading indicator - pages handle their own loading states
+		window.shopify?.loading?.(false);
+
+		// Handle App Bridge navigation events for SvelteKit
 		const handleNavigate = (event: Event) => {
 			const target = event.target as HTMLElement;
 			const href = target.getAttribute('href');
@@ -28,7 +32,6 @@
 <svelte:head>
 	<meta name="shopify-api-key" content={data.apiKey} />
 	<script src="https://cdn.shopify.com/shopifycloud/app-bridge.js"></script>
-	<script src="https://cdn.shopify.com/shopifycloud/polaris.js"></script>
 </svelte:head>
 
 <s-app-nav>
@@ -39,4 +42,6 @@
 	<s-link href="/app/template-info">Template Info</s-link>
 </s-app-nav>
 
-{@render children()}
+<div class="app-frame">
+	{@render children()}
+</div>

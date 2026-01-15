@@ -1,6 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Skeleton from '$lib/components/Skeleton.svelte';
+	import {
+		Page,
+		Card,
+		Button,
+		Banner,
+		DataTable,
+		SearchField,
+		Badge,
+		Text,
+		Skeleton,
+		Icon,
+		EmptyState
+	} from '$lib/components';
 
 	interface Product {
 		id: string;
@@ -60,7 +72,6 @@
 		const input = event.target as HTMLInputElement;
 		searchQuery = input.value;
 
-		// Debounce search
 		if (searchTimeout) {
 			clearTimeout(searchTimeout);
 		}
@@ -70,6 +81,14 @@
 			await fetchProducts(searchQuery);
 			isSearching = false;
 		}, 300);
+	}
+
+	function handleClearSearch() {
+		searchQuery = '';
+		isSearching = true;
+		fetchProducts('').then(() => {
+			isSearching = false;
+		});
 	}
 
 	function formatDate(dateString: string): string {
@@ -89,16 +108,16 @@
 		});
 	}
 
-	function getStatusTone(status: string): string {
+	function getStatusTone(status: string): 'success' | 'default' | 'warning' {
 		switch (status) {
 			case 'ACTIVE':
 				return 'success';
 			case 'DRAFT':
-				return 'neutral';
+				return 'default';
 			case 'ARCHIVED':
 				return 'warning';
 			default:
-				return 'neutral';
+				return 'default';
 		}
 	}
 
@@ -120,171 +139,179 @@
 	<title>Products</title>
 </svelte:head>
 
-<s-page heading="Products">
-	<s-link slot="primary-action" href="shopify://admin/products/new">
-		<s-button>Add product</s-button>
-	</s-link>
+<Page title="Products">
+	{#snippet primaryAction()}
+		<Button variant="primary" href="shopify://admin/products/new">Add product</Button>
+	{/snippet}
 
 	{#if error}
-		<s-banner tone="critical" heading="Error loading products">
+		<Banner tone="critical" title="Error loading products">
 			{error}
-		</s-banner>
+		</Banner>
 	{/if}
 
-	{#if isLoading}
-		<s-section padding="none" accessibilityLabel="Loading products">
-			<s-table>
-				<s-grid slot="filters" gap="small-200" gridTemplateColumns="1fr auto">
-					<Skeleton variant="box" width="100%" height="36px" />
-					<Skeleton variant="box" width="36px" height="36px" />
-				</s-grid>
-				<s-table-header-row>
-					<s-table-header listSlot="primary">Product</s-table-header>
-					<s-table-header format="numeric">Price</s-table-header>
-					<s-table-header format="numeric">Inventory</s-table-header>
-					<s-table-header>Created</s-table-header>
-					<s-table-header listSlot="secondary">Status</s-table-header>
-				</s-table-header-row>
-				<s-table-body>
+	<Card padding="none">
+		<div class="table-filters">
+			<SearchField
+				placeholder="Search products"
+				value={searchQuery}
+				oninput={handleSearch}
+				onclear={handleClearSearch}
+			/>
+			<Button variant="secondary">
+				{#snippet icon()}<Icon name="filter" />{/snippet}
+				Filter
+			</Button>
+		</div>
+
+		{#if isLoading || isSearching}
+			<DataTable>
+				<thead>
+					<tr>
+						<th>Product</th>
+						<th data-align="right">Price</th>
+						<th data-align="right">Inventory</th>
+						<th>Created</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
 					{#each [1, 2, 3, 4, 5] as i}
-						<s-table-row>
-							<s-table-cell>
-								<s-stack direction="inline" gap="small" alignItems="center">
+						<tr>
+							<td>
+								<div class="cell-content">
 									<Skeleton variant="box" />
 									<Skeleton variant="text" width="120px" />
-								</s-stack>
-							</s-table-cell>
-							<s-table-cell>
-								<Skeleton variant="text" width="60px" />
-							</s-table-cell>
-							<s-table-cell>
-								<Skeleton variant="text" width="80px" />
-							</s-table-cell>
-							<s-table-cell>
-								<Skeleton variant="text" width="70px" />
-							</s-table-cell>
-							<s-table-cell>
-								<Skeleton variant="badge" />
-							</s-table-cell>
-						</s-table-row>
+								</div>
+							</td>
+							<td data-align="right"><Skeleton variant="text" width="60px" /></td>
+							<td data-align="right"><Skeleton variant="text" width="80px" /></td>
+							<td><Skeleton variant="text" width="70px" /></td>
+							<td><Skeleton variant="badge" /></td>
+						</tr>
 					{/each}
-				</s-table-body>
-			</s-table>
-		</s-section>
-	{:else}
-		<s-section padding="none" accessibilityLabel="Products table section">
-			<s-table>
-				<s-grid slot="filters" gap="small-200" gridTemplateColumns="1fr auto">
-					<s-search-field
-						label="Search products"
-						labelAccessibilityVisibility="exclusive"
-						placeholder="Search products"
-						value={searchQuery}
-						oninput={handleSearch}
-					></s-search-field>
-					<s-button
-						icon="filter"
-						variant="secondary"
-						accessibilityLabel="Filter"
-					></s-button>
-				</s-grid>
-				<s-table-header-row>
-					<s-table-header listSlot="primary">Product</s-table-header>
-					<s-table-header format="numeric">Price</s-table-header>
-					<s-table-header format="numeric">Inventory</s-table-header>
-					<s-table-header>Created</s-table-header>
-					<s-table-header listSlot="secondary">Status</s-table-header>
-				</s-table-header-row>
-				{#if isSearching}
-					<s-table-body>
-						{#each [1, 2, 3, 4, 5] as i}
-							<s-table-row>
-								<s-table-cell>
-									<s-stack direction="inline" gap="small" alignItems="center">
-										<Skeleton variant="box" />
-										<Skeleton variant="text" width="120px" />
-									</s-stack>
-								</s-table-cell>
-								<s-table-cell>
-									<Skeleton variant="text" width="60px" />
-								</s-table-cell>
-								<s-table-cell>
-									<Skeleton variant="text" width="80px" />
-								</s-table-cell>
-								<s-table-cell>
-									<Skeleton variant="text" width="70px" />
-								</s-table-cell>
-								<s-table-cell>
-									<Skeleton variant="badge" />
-								</s-table-cell>
-							</s-table-row>
-						{/each}
-					</s-table-body>
-				{:else if products.length > 0}
-					<s-table-body>
-						{#each products as product (product.id)}
-							<s-table-row>
-								<s-table-cell>
-									<s-stack direction="inline" gap="small" alignItems="center">
-										<s-clickable
-											href={getProductAdminUrl(product.id)}
-											accessibilityLabel="{product.title} thumbnail"
-											border="base"
-											borderRadius="base"
-											overflow="hidden"
-											inlineSize="40px"
-											blockSize="40px"
-										>
-											{#if product.image}
-												<s-image objectFit="cover" src={product.image}></s-image>
-											{:else}
-												<s-box
-													background="subdued"
-													inlineSize="40px"
-													blockSize="40px"
-													padding="small"
-												>
-													<s-icon name="image"></s-icon>
-												</s-box>
-											{/if}
-										</s-clickable>
-										<s-link href={getProductAdminUrl(product.id)}>{product.title}</s-link>
-									</s-stack>
-								</s-table-cell>
-								<s-table-cell>{formatPrice(product.price)}</s-table-cell>
-								<s-table-cell>
-									{#if product.inventory !== null}
-										{product.inventory} in stock
-									{:else}
-										<s-text tone="subdued">Not tracked</s-text>
-									{/if}
-								</s-table-cell>
-								<s-table-cell>{formatDate(product.createdAt)}</s-table-cell>
-								<s-table-cell>
-									<s-badge color="base" tone={getStatusTone(product.status)}>
-										{formatStatus(product.status)}
-									</s-badge>
-								</s-table-cell>
-							</s-table-row>
-						{/each}
-					</s-table-body>
-				{:else if searchQuery}
-					<s-box padding="large-400">
-						<s-stack alignItems="center" gap="small">
-							<s-text color="subdued">No products found matching "{searchQuery}"</s-text>
-						</s-stack>
-					</s-box>
-				{:else}
-					<s-box padding="large-400">
-						<s-stack alignItems="center" gap="base">
-							<s-text color="subdued">No products yet</s-text>
-							<s-link href="shopify://admin/products/new">
-								<s-button>Add product</s-button>
-							</s-link>
-						</s-stack>
-					</s-box>
-				{/if}
-			</s-table>
-		</s-section>
-	{/if}
-</s-page>
+				</tbody>
+			</DataTable>
+		{:else if products.length > 0}
+			<DataTable>
+				<thead>
+					<tr>
+						<th>Product</th>
+						<th data-align="right">Price</th>
+						<th data-align="right">Inventory</th>
+						<th>Created</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
+					{#each products as product (product.id)}
+						<tr>
+							<td>
+								<div class="cell-content">
+									<a href={getProductAdminUrl(product.id)} class="thumbnail">
+										{#if product.image}
+											<img src={product.image} alt={product.imageAlt} />
+										{:else}
+											<div class="thumbnail-placeholder">
+												<Icon name="image" tone="subdued" />
+											</div>
+										{/if}
+									</a>
+									<a href={getProductAdminUrl(product.id)} class="product-link">
+										{product.title}
+									</a>
+								</div>
+							</td>
+							<td data-align="right">{formatPrice(product.price)}</td>
+							<td data-align="right">
+								{#if product.inventory !== null}
+									{product.inventory} in stock
+								{:else}
+									<Text tone="subdued">Not tracked</Text>
+								{/if}
+							</td>
+							<td>{formatDate(product.createdAt)}</td>
+							<td>
+								<Badge tone={getStatusTone(product.status)}>
+									{formatStatus(product.status)}
+								</Badge>
+							</td>
+						</tr>
+					{/each}
+				</tbody>
+			</DataTable>
+		{:else if searchQuery}
+			<div class="empty-search">
+				<Text tone="subdued">No products found matching "{searchQuery}"</Text>
+			</div>
+		{:else}
+			<EmptyState
+				heading="No products yet"
+				description="Add products to start selling"
+			>
+				<Button variant="primary" href="shopify://admin/products/new">Add product</Button>
+			</EmptyState>
+		{/if}
+	</Card>
+</Page>
+
+<style>
+	.table-filters {
+		display: flex;
+		gap: var(--space-200);
+		padding: var(--space-400);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.table-filters :global(.search-field) {
+		flex: 1;
+	}
+
+	.cell-content {
+		display: flex;
+		align-items: center;
+		gap: var(--space-200);
+	}
+
+	.thumbnail {
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		flex-shrink: 0;
+		background: var(--color-bg-surface-secondary);
+		border: 1px solid var(--color-border);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.thumbnail img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.thumbnail-placeholder {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
+	}
+
+	.product-link {
+		color: var(--color-text-info);
+		text-decoration: none;
+		font-weight: var(--font-weight-medium);
+	}
+
+	.product-link:hover {
+		text-decoration: underline;
+	}
+
+	.empty-search {
+		padding: var(--space-800);
+		text-align: center;
+	}
+</style>

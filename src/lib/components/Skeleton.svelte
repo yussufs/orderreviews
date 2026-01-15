@@ -28,9 +28,14 @@
 
 <style>
 	.skeleton {
-		background: linear-gradient(90deg, #e4e5e7 0%, #f0f1f2 50%, #e4e5e7 100%);
+		background: linear-gradient(
+			90deg,
+			var(--color-bg-surface-secondary) 0%,
+			var(--color-bg-surface-tertiary) 50%,
+			var(--color-bg-surface-secondary) 100%
+		);
 		background-size: 200% 100%;
-		animation: shimmer 1.5s ease-in-out infinite;
+		animation: shimmer 1.5s var(--ease-in-out) infinite;
 		flex-shrink: 0;
 	}
 

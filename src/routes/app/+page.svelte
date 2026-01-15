@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { Page, Card, Button, Banner, Text, Badge, Divider, Checkbox, Icon } from '$lib/components';
+
 	let visible = $state({
 		banner: true,
 		setupGuide: true,
@@ -25,452 +27,603 @@
 	<title>Home</title>
 </svelte:head>
 
-<s-page>
-	<s-button slot="primary-action">Create puzzle</s-button>
-	<s-button slot="secondary-actions">Browse templates</s-button>
-	<s-button slot="secondary-actions">Import image</s-button>
+<Page title="Home">
+	{#snippet primaryAction()}
+		<Button variant="primary">Create puzzle</Button>
+	{/snippet}
+
+	{#snippet secondaryActions()}
+		<Button>Browse templates</Button>
+		<Button>Import image</Button>
+	{/snippet}
 
 	<!-- Banner -->
 	{#if visible.banner}
-		<s-banner dismissible onDismiss={() => (visible.banner = false)}>
-			3 of 5 puzzles created.
-			<s-link href="#">Upgrade to Puzzlify Pro</s-link> to create unlimited puzzles.
-		</s-banner>
+		<Banner tone="info" dismissible ondismiss={() => (visible.banner = false)}>
+			3 of 5 puzzles created. <a href="#" class="banner-link">Upgrade to Puzzlify Pro</a> to create
+			unlimited puzzles.
+		</Banner>
 	{/if}
 
 	<!-- Setup Guide -->
 	{#if visible.setupGuide}
-		<s-section>
-			<s-grid gap="small">
-				<!-- Header -->
-				<s-grid gap="small-200">
-					<s-grid gridTemplateColumns="1fr auto auto" gap="small-300" alignItems="center">
-						<s-heading>Setup Guide</s-heading>
-						<s-button
-							accessibilityLabel="Dismiss Guide"
-							onclick={() => (visible.setupGuide = false)}
-							variant="tertiary"
-							tone="neutral"
-							icon="x"
-						></s-button>
-						<s-button
-							accessibilityLabel="Toggle setup guide"
-							onclick={() => (expanded.setupGuide = !expanded.setupGuide)}
-							variant="tertiary"
-							tone="neutral"
-							icon={expanded.setupGuide ? 'chevron-up' : 'chevron-down'}
-						></s-button>
-					</s-grid>
-					<s-paragraph>
-						Use this personalized guide to get your store ready for sales.
-					</s-paragraph>
-					<s-paragraph color="subdued">{progress} out of 3 steps completed</s-paragraph>
-				</s-grid>
-
-				<!-- Steps Container -->
-				<s-box
-					borderRadius="base"
-					border="base"
-					background="base"
-					display={expanded.setupGuide ? 'auto' : 'none'}
+		<Card>
+			{#snippet actions()}
+				<Button
+					variant="tertiary"
+					iconOnly
+					onclick={() => (visible.setupGuide = false)}
 				>
+					{#snippet icon()}<Icon name="x" />{/snippet}
+				</Button>
+				<Button
+					variant="tertiary"
+					iconOnly
+					onclick={() => (expanded.setupGuide = !expanded.setupGuide)}
+				>
+					{#snippet icon()}
+						<Icon name={expanded.setupGuide ? 'chevron-up' : 'chevron-down'} />
+					{/snippet}
+				</Button>
+			{/snippet}
+			<div class="setup-header">
+				<Text variant="headingMd">Setup Guide</Text>
+				<Text as="p" tone="subdued">Use this personalized guide to get your store ready for sales.</Text>
+				<Text as="p" variant="bodySm" tone="subdued">{progress} out of 3 steps completed</Text>
+			</div>
+
+			{#if expanded.setupGuide}
+				<div class="setup-steps">
 					<!-- Step 1 -->
-					<s-box>
-						<s-grid gridTemplateColumns="1fr auto" gap="base" padding="small">
-							<s-checkbox
+					<div class="setup-step">
+						<div class="step-header">
+							<Checkbox
 								label="Upload an image for your puzzle"
-								onInput={updateProgress}
-							></s-checkbox>
-							<s-button
-								onclick={() => (expanded.step1 = !expanded.step1)}
-								accessibilityLabel="Toggle step 1 details"
+								name="step1"
+								onchange={updateProgress}
+							/>
+							<Button
 								variant="tertiary"
-								icon={expanded.step1 ? 'chevron-up' : 'chevron-down'}
-							></s-button>
-						</s-grid>
-						<s-box padding="small" paddingBlockStart="none" display={expanded.step1 ? 'auto' : 'none'}>
-							<s-box padding="base" background="subdued" borderRadius="base">
-								<s-grid gridTemplateColumns="1fr auto" gap="base" alignItems="center">
-									<s-grid gap="small-200">
-										<s-paragraph>
-											Start by uploading a high-quality image that will be used to create your
-											puzzle. For best results, use images that are at least 1200x1200 pixels.
-										</s-paragraph>
-										<s-stack direction="inline" gap="small-200">
-											<s-button variant="primary">Upload image</s-button>
-											<s-button variant="tertiary" tone="neutral">Image requirements</s-button>
-										</s-stack>
-									</s-grid>
-									<s-box maxBlockSize="80px" maxInlineSize="80px">
-										<s-image
-											src="https://cdn.shopify.com/s/assets/admin/checkout/settings-customizecart-705f57c725ac05be5a34ec20c05b94298cb8afd10aac7bd9c7ad02030f48cfa0.svg"
-											alt="Customize checkout illustration"
-										></s-image>
-									</s-box>
-								</s-grid>
-							</s-box>
-						</s-box>
-					</s-box>
+								iconOnly
+								onclick={() => (expanded.step1 = !expanded.step1)}
+							>
+								{#snippet icon()}
+									<Icon name={expanded.step1 ? 'chevron-up' : 'chevron-down'} />
+								{/snippet}
+							</Button>
+						</div>
+						{#if expanded.step1}
+							<div class="step-content">
+								<div class="step-details">
+									<Text as="p">
+										Start by uploading a high-quality image that will be used to create your
+										puzzle. For best results, use images that are at least 1200x1200 pixels.
+									</Text>
+									<div class="step-actions">
+										<Button variant="primary">Upload image</Button>
+										<Button variant="plain">Image requirements</Button>
+									</div>
+								</div>
+								<img
+									src="https://cdn.shopify.com/s/assets/admin/checkout/settings-customizecart-705f57c725ac05be5a34ec20c05b94298cb8afd10aac7bd9c7ad02030f48cfa0.svg"
+									alt="Upload illustration"
+									class="step-image"
+								/>
+							</div>
+						{/if}
+					</div>
+
+					<Divider spacing="none" />
 
 					<!-- Step 2 -->
-					<s-divider></s-divider>
-					<s-box>
-						<s-grid gridTemplateColumns="1fr auto" gap="base" padding="small">
-							<s-checkbox
+					<div class="setup-step">
+						<div class="step-header">
+							<Checkbox
 								label="Choose a puzzle template"
-								onInput={updateProgress}
-							></s-checkbox>
-							<s-button
-								onclick={() => (expanded.step2 = !expanded.step2)}
-								accessibilityLabel="Toggle step 2 details"
+								name="step2"
+								onchange={updateProgress}
+							/>
+							<Button
 								variant="tertiary"
-								icon={expanded.step2 ? 'chevron-up' : 'chevron-down'}
-							></s-button>
-						</s-grid>
-						<s-box padding="small" paddingBlockStart="none" display={expanded.step2 ? 'auto' : 'none'}>
-							<s-box padding="base" background="subdued" borderRadius="base">
-								<s-grid gridTemplateColumns="1fr auto" gap="base" alignItems="center">
-									<s-grid gap="small-200">
-										<s-paragraph>
-											Select a template for your puzzle - choose between 9-piece (beginner),
-											16-piece (intermediate), or 25-piece (advanced) layouts.
-										</s-paragraph>
-										<s-stack direction="inline" gap="small-200">
-											<s-button variant="primary">Choose template</s-button>
-											<s-button variant="tertiary" tone="neutral">See all templates</s-button>
-										</s-stack>
-									</s-grid>
-									<s-box maxBlockSize="80px" maxInlineSize="80px">
-										<s-image
-											src="https://cdn.shopify.com/s/assets/admin/checkout/settings-customizecart-705f57c725ac05be5a34ec20c05b94298cb8afd10aac7bd9c7ad02030f48cfa0.svg"
-											alt="Customize checkout illustration"
-										></s-image>
-									</s-box>
-								</s-grid>
-							</s-box>
-						</s-box>
-					</s-box>
+								iconOnly
+								onclick={() => (expanded.step2 = !expanded.step2)}
+							>
+								{#snippet icon()}
+									<Icon name={expanded.step2 ? 'chevron-up' : 'chevron-down'} />
+								{/snippet}
+							</Button>
+						</div>
+						{#if expanded.step2}
+							<div class="step-content">
+								<div class="step-details">
+									<Text as="p">
+										Select a template for your puzzle - choose between 9-piece (beginner),
+										16-piece (intermediate), or 25-piece (advanced) layouts.
+									</Text>
+									<div class="step-actions">
+										<Button variant="primary">Choose template</Button>
+										<Button variant="plain">See all templates</Button>
+									</div>
+								</div>
+								<img
+									src="https://cdn.shopify.com/s/assets/admin/checkout/settings-customizecart-705f57c725ac05be5a34ec20c05b94298cb8afd10aac7bd9c7ad02030f48cfa0.svg"
+									alt="Template illustration"
+									class="step-image"
+								/>
+							</div>
+						{/if}
+					</div>
+
+					<Divider spacing="none" />
 
 					<!-- Step 3 -->
-					<s-divider></s-divider>
-					<s-box>
-						<s-grid gridTemplateColumns="1fr auto" gap="base" padding="small">
-							<s-checkbox
+					<div class="setup-step">
+						<div class="step-header">
+							<Checkbox
 								label="Customize puzzle piece shapes"
-								onInput={updateProgress}
-							></s-checkbox>
-							<s-button
-								onclick={() => (expanded.step3 = !expanded.step3)}
-								accessibilityLabel="Toggle step 3 details"
+								name="step3"
+								onchange={updateProgress}
+							/>
+							<Button
 								variant="tertiary"
-								icon={expanded.step3 ? 'chevron-up' : 'chevron-down'}
-							></s-button>
-						</s-grid>
-						<s-box padding="small" paddingBlockStart="none" display={expanded.step3 ? 'auto' : 'none'}>
-							<s-box padding="base" background="subdued" borderRadius="base">
-								<s-grid gridTemplateColumns="1fr auto" gap="base" alignItems="center">
-									<s-grid gap="small-200">
-										<s-paragraph>
-											Make your puzzle unique by customizing the shapes of individual pieces.
-											Choose from classic, curved, or themed piece styles.
-										</s-paragraph>
-										<s-stack direction="inline" gap="small-200">
-											<s-button variant="primary">Customize pieces</s-button>
-											<s-button variant="tertiary" tone="neutral">Learn about piece styles</s-button>
-										</s-stack>
-									</s-grid>
-									<s-box maxBlockSize="80px" maxInlineSize="80px">
-										<s-image
-											src="https://cdn.shopify.com/s/assets/admin/checkout/settings-customizecart-705f57c725ac05be5a34ec20c05b94298cb8afd10aac7bd9c7ad02030f48cfa0.svg"
-											alt="Customize checkout illustration"
-										></s-image>
-									</s-box>
-								</s-grid>
-							</s-box>
-						</s-box>
-					</s-box>
-				</s-box>
-			</s-grid>
-		</s-section>
+								iconOnly
+								onclick={() => (expanded.step3 = !expanded.step3)}
+							>
+								{#snippet icon()}
+									<Icon name={expanded.step3 ? 'chevron-up' : 'chevron-down'} />
+								{/snippet}
+							</Button>
+						</div>
+						{#if expanded.step3}
+							<div class="step-content">
+								<div class="step-details">
+									<Text as="p">
+										Make your puzzle unique by customizing the shapes of individual pieces.
+										Choose from classic, curved, or themed piece styles.
+									</Text>
+									<div class="step-actions">
+										<Button variant="primary">Customize pieces</Button>
+										<Button variant="plain">Learn about piece styles</Button>
+									</div>
+								</div>
+								<img
+									src="https://cdn.shopify.com/s/assets/admin/checkout/settings-customizecart-705f57c725ac05be5a34ec20c05b94298cb8afd10aac7bd9c7ad02030f48cfa0.svg"
+									alt="Customize illustration"
+									class="step-image"
+								/>
+							</div>
+						{/if}
+					</div>
+				</div>
+			{/if}
+		</Card>
 	{/if}
 
-	<!-- Metrics cards -->
-	<s-section padding="base">
-		<s-grid
-			gridTemplateColumns="@container (inline-size <= 400px) 1fr, 1fr auto 1fr auto 1fr"
-			gap="small"
-		>
-			<s-clickable href="#" paddingBlock="small-400" paddingInline="small-100" borderRadius="base">
-				<s-grid gap="small-300">
-					<s-heading>Total Designs</s-heading>
-					<s-stack direction="inline" gap="small-200">
-						<s-text>156</s-text>
-						<s-badge tone="success" icon="arrow-up">12%</s-badge>
-					</s-stack>
-				</s-grid>
-			</s-clickable>
-			<s-divider direction="block"></s-divider>
-			<s-clickable href="#" paddingBlock="small-400" paddingInline="small-100" borderRadius="base">
-				<s-grid gap="small-300">
-					<s-heading>Units Sold</s-heading>
-					<s-stack direction="inline" gap="small-200">
-						<s-text>2,847</s-text>
-						<s-badge tone="warning">0%</s-badge>
-					</s-stack>
-				</s-grid>
-			</s-clickable>
-			<s-divider direction="block"></s-divider>
-			<s-clickable href="#" paddingBlock="small-400" paddingInline="small-100" borderRadius="base">
-				<s-grid gap="small-300">
-					<s-heading>Return Rate</s-heading>
-					<s-stack direction="inline" gap="small-200">
-						<s-text>3.2%</s-text>
-						<s-badge tone="critical" icon="arrow-down">0.8%</s-badge>
-					</s-stack>
-				</s-grid>
-			</s-clickable>
-		</s-grid>
-	</s-section>
+	<!-- Metrics Cards -->
+	<Card padding="tight">
+		<div class="metrics-grid">
+			<a href="#" class="metric-card">
+				<Text variant="headingSm">Total Designs</Text>
+				<div class="metric-value">
+					<Text variant="headingLg">156</Text>
+					<Badge tone="success">
+						<Icon name="arrow-up" size="small" /> 12%
+					</Badge>
+				</div>
+			</a>
+			<div class="metric-divider"></div>
+			<a href="#" class="metric-card">
+				<Text variant="headingSm">Units Sold</Text>
+				<div class="metric-value">
+					<Text variant="headingLg">2,847</Text>
+					<Badge tone="warning">0%</Badge>
+				</div>
+			</a>
+			<div class="metric-divider"></div>
+			<a href="#" class="metric-card">
+				<Text variant="headingSm">Return Rate</Text>
+				<div class="metric-value">
+					<Text variant="headingLg">3.2%</Text>
+					<Badge tone="critical">
+						<Icon name="arrow-down" size="small" /> 0.8%
+					</Badge>
+				</div>
+			</a>
+		</div>
+	</Card>
 
 	<!-- Callout Card -->
 	{#if visible.calloutCard}
-		<s-section>
-			<s-grid gridTemplateColumns="1fr auto" gap="small-400" alignItems="start">
-				<s-grid
-					gridTemplateColumns="@container (inline-size <= 480px) 1fr, auto auto"
-					gap="base"
-					alignItems="center"
-				>
-					<s-grid gap="small-200">
-						<s-heading>Ready to create your custom puzzle?</s-heading>
-						<s-paragraph>
-							Start by uploading an image to your gallery or choose from one of our templates.
-						</s-paragraph>
-						<s-stack direction="inline" gap="small-200">
-							<s-button>Upload image</s-button>
-							<s-button tone="neutral" variant="tertiary">Browse templates</s-button>
-						</s-stack>
-					</s-grid>
-					<s-stack alignItems="center">
-						<s-box maxInlineSize="200px" borderRadius="base" overflow="hidden">
-							<s-image
-								src="https://cdn.shopify.com/static/images/polaris/patterns/callout.png"
-								alt="Customize checkout illustration"
-								aspectRatio="1/0.5"
-							></s-image>
-						</s-box>
-					</s-stack>
-				</s-grid>
-				<s-button
-					onclick={() => (visible.calloutCard = false)}
-					icon="x"
-					tone="neutral"
+		<Card>
+			{#snippet actions()}
+				<Button
 					variant="tertiary"
-					accessibilityLabel="Dismiss card"
-				></s-button>
-			</s-grid>
-		</s-section>
+					iconOnly
+					onclick={() => (visible.calloutCard = false)}
+				>
+					{#snippet icon()}<Icon name="x" />{/snippet}
+				</Button>
+			{/snippet}
+			<div class="callout-content">
+				<div class="callout-text">
+					<Text variant="headingMd">Ready to create your custom puzzle?</Text>
+					<Text as="p" tone="subdued">
+						Start by uploading an image to your gallery or choose from one of our templates.
+					</Text>
+					<div class="callout-actions">
+						<Button>Upload image</Button>
+						<Button variant="plain">Browse templates</Button>
+					</div>
+				</div>
+				<img
+					src="https://cdn.shopify.com/static/images/polaris/patterns/callout.png"
+					alt="Callout illustration"
+					class="callout-image"
+				/>
+			</div>
+		</Card>
 	{/if}
 
-	<!-- Puzzle templates -->
-	<s-section>
-		<s-heading>Puzzle Templates</s-heading>
-		<s-grid gridTemplateColumns="repeat(auto-fit, minmax(155px, 1fr))" gap="base">
-			<s-box border="base" borderRadius="base" overflow="hidden">
-				<s-clickable href="/app/puzzles/4-piece" accessibilityLabel="4-pieces puzzle template">
-					<s-image
-						aspectRatio="1/1"
-						objectFit="cover"
-						alt="4-pieces puzzle template"
-						src="https://cdn.shopify.com/static/images/polaris/patterns/4-pieces.png"
-					></s-image>
-				</s-clickable>
-				<s-divider></s-divider>
-				<s-grid
-					gridTemplateColumns="1fr auto"
-					background="base"
-					padding="small"
-					gap="small"
-					alignItems="center"
-				>
-					<s-heading>4-Pieces</s-heading>
-					<s-button href="/app/puzzles/4-piece" accessibilityLabel="View 4-pieces puzzle template">
-						View
-					</s-button>
-				</s-grid>
-			</s-box>
-
-			<s-box border="base" borderRadius="base" background="transparent" overflow="hidden">
-				<s-clickable href="/app/puzzles/9-piece" accessibilityLabel="9-pieces puzzle template">
-					<s-image
-						aspectRatio="1/1"
-						objectFit="cover"
-						alt="9-pieces puzzle template"
-						src="https://cdn.shopify.com/static/images/polaris/patterns/9-pieces.png"
-					></s-image>
-				</s-clickable>
-				<s-divider></s-divider>
-				<s-grid
-					gridTemplateColumns="1fr auto"
-					background="base"
-					padding="small"
-					gap="small"
-					alignItems="center"
-				>
-					<s-heading>9-Pieces</s-heading>
-					<s-button href="/app/puzzles/9-piece" accessibilityLabel="View 9-pieces puzzle template">
-						View
-					</s-button>
-				</s-grid>
-			</s-box>
-
-			<s-box border="base" borderRadius="base" background="transparent" overflow="hidden">
-				<s-clickable href="/app/puzzles/16-piece" accessibilityLabel="16-pieces puzzle template">
-					<s-image
-						aspectRatio="1/1"
-						objectFit="cover"
-						alt="16-pieces puzzle template"
-						src="https://cdn.shopify.com/static/images/polaris/patterns/16-pieces.png"
-					></s-image>
-				</s-clickable>
-				<s-divider></s-divider>
-				<s-grid
-					gridTemplateColumns="1fr auto"
-					background="base"
-					padding="small"
-					gap="small"
-					alignItems="center"
-				>
-					<s-heading>16-Pieces</s-heading>
-					<s-button
-						href="/app/puzzles/16-piece"
-						accessibilityLabel="View 16-pieces puzzle template"
-					>
-						View
-					</s-button>
-				</s-grid>
-			</s-box>
-		</s-grid>
-		<s-stack
-			direction="inline"
-			alignItems="center"
-			justifyContent="center"
-			paddingBlockStart="base"
-		>
-			<s-link href="/app/puzzles">See all puzzle templates</s-link>
-		</s-stack>
-	</s-section>
+	<!-- Puzzle Templates -->
+	<Card title="Puzzle Templates">
+		<div class="templates-grid">
+			<a href="/app/puzzles/4-piece" class="template-card">
+				<img
+					src="https://cdn.shopify.com/static/images/polaris/patterns/4-pieces.png"
+					alt="4-pieces puzzle template"
+				/>
+				<div class="template-footer">
+					<Text variant="headingSm">4-Pieces</Text>
+					<Button size="slim">View</Button>
+				</div>
+			</a>
+			<a href="/app/puzzles/9-piece" class="template-card">
+				<img
+					src="https://cdn.shopify.com/static/images/polaris/patterns/9-pieces.png"
+					alt="9-pieces puzzle template"
+				/>
+				<div class="template-footer">
+					<Text variant="headingSm">9-Pieces</Text>
+					<Button size="slim">View</Button>
+				</div>
+			</a>
+			<a href="/app/puzzles/16-piece" class="template-card">
+				<img
+					src="https://cdn.shopify.com/static/images/polaris/patterns/16-pieces.png"
+					alt="16-pieces puzzle template"
+				/>
+				<div class="template-footer">
+					<Text variant="headingSm">16-Pieces</Text>
+					<Button size="slim">View</Button>
+				</div>
+			</a>
+		</div>
+		<div class="see-all">
+			<a href="/app/puzzles" class="see-all-link">See all puzzle templates</a>
+		</div>
+	</Card>
 
 	<!-- News -->
-	<s-section>
-		<s-heading>News</s-heading>
-		<s-grid gridTemplateColumns="repeat(auto-fit, minmax(240px, 1fr))" gap="base">
-			<s-grid background="base" border="base" borderRadius="base" padding="base" gap="small-400">
-				<s-text>Jan 21, 2025</s-text>
-				<s-link href="/app/news/new-shapes-and-themes">
-					<s-heading>New puzzle shapes and themes added</s-heading>
-				</s-link>
-				<s-paragraph>
+	<Card title="News">
+		<div class="news-grid">
+			<div class="news-item">
+				<Text variant="bodySm" tone="subdued">Jan 21, 2025</Text>
+				<a href="/app/news/new-shapes-and-themes" class="news-title">
+					<Text variant="headingSm">New puzzle shapes and themes added</Text>
+				</a>
+				<Text as="p" tone="subdued">
 					We've added 5 new puzzle piece shapes and 3 seasonal themes to help you create more
 					engaging and unique puzzles for your customers.
-				</s-paragraph>
-			</s-grid>
-
-			<s-grid background="base" border="base" borderRadius="base" padding="base" gap="small-400">
-				<s-text>Nov 6, 2024</s-text>
-				<s-link href="/app/news/puzzle-difficulty-customization">
-					<s-heading>Puzzle difficulty customization features</s-heading>
-				</s-link>
-				<s-paragraph>
+				</Text>
+			</div>
+			<div class="news-item">
+				<Text variant="bodySm" tone="subdued">Nov 6, 2024</Text>
+				<a href="/app/news/puzzle-difficulty-customization" class="news-title">
+					<Text variant="headingSm">Puzzle difficulty customization features</Text>
+				</a>
+				<Text as="p" tone="subdued">
 					Now you can fine-tune the difficulty of your puzzles with new rotation controls, edge
 					highlighting options, and piece recognition settings.
-				</s-paragraph>
-			</s-grid>
-		</s-grid>
-		<s-stack
-			direction="inline"
-			alignItems="center"
-			justifyContent="center"
-			paddingBlockStart="base"
-		>
-			<s-link href="/app/news">See all news items</s-link>
-		</s-stack>
-	</s-section>
+				</Text>
+			</div>
+		</div>
+		<div class="see-all">
+			<a href="/app/news" class="see-all-link">See all news items</a>
+		</div>
+	</Card>
 
-	<!-- Featured apps -->
+	<!-- Featured Apps -->
 	{#if visible.featuredApps}
-		<s-section>
-			<s-grid gridTemplateColumns="1fr auto" alignItems="center" paddingBlockEnd="small-400">
-				<s-heading>Featured apps</s-heading>
-				<s-button
-					onclick={() => (visible.featuredApps = false)}
-					icon="x"
-					tone="neutral"
+		<Card title="Featured apps">
+			{#snippet actions()}
+				<Button
 					variant="tertiary"
-					accessibilityLabel="Dismiss featured apps section"
-				></s-button>
-			</s-grid>
-			<s-grid gridTemplateColumns="repeat(auto-fit, minmax(240px, 1fr))" gap="base">
-				<s-clickable
-					href="https://apps.shopify.com/flow"
-					border="base"
-					borderRadius="base"
-					padding="base"
-					inlineSize="100%"
-					accessibilityLabel="Download Shopify Flow"
+					iconOnly
+					onclick={() => (visible.featuredApps = false)}
 				>
-					<s-grid gridTemplateColumns="auto 1fr auto" alignItems="stretch" gap="base">
-						<s-thumbnail
-							size="small"
-							src="https://cdn.shopify.com/app-store/listing_images/15100ebca4d221b650a7671125cd1444/icon/CO25r7-jh4ADEAE=.png"
-							alt="Shopify Flow icon"
-						></s-thumbnail>
-						<s-box>
-							<s-heading>Shopify Flow</s-heading>
-							<s-paragraph>Free</s-paragraph>
-							<s-paragraph>Automate everything and get back to business.</s-paragraph>
-						</s-box>
-						<s-stack justifyContent="start">
-							<s-button
-								href="https://apps.shopify.com/flow"
-								icon="download"
-								accessibilityLabel="Download Shopify Flow"
-							></s-button>
-						</s-stack>
-					</s-grid>
-				</s-clickable>
-
-				<s-clickable
-					href="https://apps.shopify.com/planet"
-					border="base"
-					borderRadius="base"
-					padding="base"
-					inlineSize="100%"
-					accessibilityLabel="Download Shopify Planet"
-				>
-					<s-grid gridTemplateColumns="auto 1fr auto" alignItems="stretch" gap="base">
-						<s-thumbnail
-							size="small"
-							src="https://cdn.shopify.com/app-store/listing_images/87176a11f3714753fdc2e1fc8bbf0415/icon/CIqiqqXsiIADEAE=.png"
-							alt="Shopify Planet icon"
-						></s-thumbnail>
-						<s-box>
-							<s-heading>Shopify Planet</s-heading>
-							<s-paragraph>Free</s-paragraph>
-							<s-paragraph>
-								Offer carbon-neutral shipping and showcase your commitment.
-							</s-paragraph>
-						</s-box>
-						<s-stack justifyContent="start">
-							<s-button
-								href="https://apps.shopify.com/planet"
-								icon="download"
-								accessibilityLabel="Download Shopify Planet"
-							></s-button>
-						</s-stack>
-					</s-grid>
-				</s-clickable>
-			</s-grid>
-		</s-section>
+					{#snippet icon()}<Icon name="x" />{/snippet}
+				</Button>
+			{/snippet}
+			<div class="apps-grid">
+				<a href="https://apps.shopify.com/flow" class="app-card" target="_blank" rel="noopener">
+					<img
+						src="https://cdn.shopify.com/app-store/listing_images/15100ebca4d221b650a7671125cd1444/icon/CO25r7-jh4ADEAE=.png"
+						alt="Shopify Flow"
+						class="app-icon"
+					/>
+					<div class="app-info">
+						<Text variant="headingSm">Shopify Flow</Text>
+						<Text variant="bodySm" tone="subdued">Free</Text>
+						<Text variant="bodySm" tone="subdued">Automate everything and get back to business.</Text>
+					</div>
+					<Button variant="tertiary" iconOnly>
+						{#snippet icon()}<Icon name="download" />{/snippet}
+					</Button>
+				</a>
+				<a href="https://apps.shopify.com/planet" class="app-card" target="_blank" rel="noopener">
+					<img
+						src="https://cdn.shopify.com/app-store/listing_images/87176a11f3714753fdc2e1fc8bbf0415/icon/CIqiqqXsiIADEAE=.png"
+						alt="Shopify Planet"
+						class="app-icon"
+					/>
+					<div class="app-info">
+						<Text variant="headingSm">Shopify Planet</Text>
+						<Text variant="bodySm" tone="subdued">Free</Text>
+						<Text variant="bodySm" tone="subdued">
+							Offer carbon-neutral shipping and showcase your commitment.
+						</Text>
+					</div>
+					<Button variant="tertiary" iconOnly>
+						{#snippet icon()}<Icon name="download" />{/snippet}
+					</Button>
+				</a>
+			</div>
+		</Card>
 	{/if}
-</s-page>
+</Page>
+
+<style>
+	.banner-link {
+		color: inherit;
+		font-weight: var(--font-weight-medium);
+	}
+
+	.setup-header {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-100);
+		margin-bottom: var(--space-400);
+	}
+
+	.setup-steps {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+	}
+
+	.setup-step {
+		padding: var(--space-300);
+	}
+
+	.step-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: var(--space-400);
+	}
+
+	.step-content {
+		display: flex;
+		gap: var(--space-400);
+		margin-top: var(--space-300);
+		padding: var(--space-400);
+		background: var(--color-bg-surface-secondary);
+		border-radius: var(--radius-md);
+	}
+
+	.step-details {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-300);
+	}
+
+	.step-actions {
+		display: flex;
+		gap: var(--space-200);
+	}
+
+	.step-image {
+		width: 80px;
+		height: 80px;
+		object-fit: contain;
+		flex-shrink: 0;
+	}
+
+	.metrics-grid {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr auto 1fr;
+		gap: var(--space-200);
+	}
+
+	@media (max-width: 600px) {
+		.metrics-grid {
+			grid-template-columns: 1fr;
+		}
+
+		.metric-divider {
+			display: none;
+		}
+	}
+
+	.metric-card {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-200);
+		padding: var(--space-300);
+		border-radius: var(--radius-md);
+		text-decoration: none;
+		color: inherit;
+		transition: background-color var(--duration-fast) var(--ease-default);
+	}
+
+	.metric-card:hover {
+		background: var(--color-bg-surface-hover);
+	}
+
+	.metric-value {
+		display: flex;
+		align-items: center;
+		gap: var(--space-200);
+	}
+
+	.metric-divider {
+		width: 1px;
+		background: var(--color-border);
+	}
+
+	.callout-content {
+		display: flex;
+		gap: var(--space-600);
+		align-items: center;
+	}
+
+	.callout-text {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-200);
+	}
+
+	.callout-actions {
+		display: flex;
+		gap: var(--space-200);
+		margin-top: var(--space-200);
+	}
+
+	.callout-image {
+		width: 200px;
+		border-radius: var(--radius-md);
+		object-fit: cover;
+	}
+
+	@media (max-width: 600px) {
+		.callout-content {
+			flex-direction: column-reverse;
+		}
+
+		.callout-image {
+			width: 100%;
+			max-width: 200px;
+		}
+	}
+
+	.templates-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+		gap: var(--space-400);
+	}
+
+	.template-card {
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		text-decoration: none;
+		color: inherit;
+		transition: box-shadow var(--duration-fast) var(--ease-default);
+	}
+
+	.template-card:hover {
+		box-shadow: var(--shadow-md);
+	}
+
+	.template-card img {
+		width: 100%;
+		aspect-ratio: 1;
+		object-fit: cover;
+	}
+
+	.template-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding: var(--space-300);
+		background: var(--color-bg-surface);
+		border-top: 1px solid var(--color-border);
+	}
+
+	.see-all {
+		text-align: center;
+		margin-top: var(--space-400);
+	}
+
+	.see-all-link {
+		color: var(--color-text-info);
+		text-decoration: none;
+		font-weight: var(--font-weight-medium);
+	}
+
+	.see-all-link:hover {
+		text-decoration: underline;
+	}
+
+	.news-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+		gap: var(--space-400);
+	}
+
+	.news-item {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-200);
+		padding: var(--space-400);
+		background: var(--color-bg-surface);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+	}
+
+	.news-title {
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.news-title:hover {
+		text-decoration: underline;
+	}
+
+	.apps-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: var(--space-400);
+	}
+
+	.app-card {
+		display: flex;
+		gap: var(--space-300);
+		padding: var(--space-400);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius-md);
+		text-decoration: none;
+		color: inherit;
+		transition: background-color var(--duration-fast) var(--ease-default);
+	}
+
+	.app-card:hover {
+		background: var(--color-bg-surface-hover);
+	}
+
+	.app-icon {
+		width: 48px;
+		height: 48px;
+		border-radius: var(--radius-md);
+		flex-shrink: 0;
+	}
+
+	.app-info {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-050);
+	}
+</style>

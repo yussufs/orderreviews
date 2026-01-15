@@ -8,7 +8,7 @@ This is a SvelteKit template for building embedded Shopify apps.
 - **Database**: PostgreSQL with Drizzle ORM
 - **API**: Shopify Admin GraphQL API
 - **Authentication**: Shopify OAuth with session tokens
-- **UI**: Polaris Web Components (see [docs/POLARIS_COMPONENTS.md](docs/POLARIS_COMPONENTS.md))
+- **UI**: Custom Svelte components with App Bridge web components (see [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md))
 
 ## Key Directories
 
@@ -55,7 +55,6 @@ Official Shopify MCP server for Shopify development:
 - **fetch_full_docs**: Retrieve full documentation pages from shopify.dev
 - **introspect_graphql_schema**: Explore Shopify GraphQL schemas
 - **validate_graphql_codeblocks**: Validate GraphQL queries against Shopify schemas
-- **validate_component_codeblocks**: Validate Polaris component usage
 
 ### Context7 MCP
 Up-to-date documentation for any library:
@@ -71,7 +70,6 @@ Browser automation for testing and debugging:
 Always use the `/shopify` skill for ANY question about:
 - Shopify APIs (Admin, Storefront, Partner, etc.)
 - GraphQL queries/mutations for Shopify
-- Polaris components
 - Liquid themes
 - Shopify Functions
 - Shopify app development patterns
@@ -165,18 +163,19 @@ See `src/routes/app/products/` and `src/routes/api/products/` for a complete exa
 3. Valid sessions get `locals.shopify.admin` GraphQL client
 4. Invalid sessions redirect to OAuth at `/auth`
 
-## Polaris Web Components
+## UI Components
 
-For building UI, use Shopify's Polaris web components (`s-` prefixed). Full documentation: [docs/POLARIS_COMPONENTS.md](docs/POLARIS_COMPONENTS.md)
+This project uses custom Svelte components instead of Polaris web components. Build your own components styled to match Shopify admin aesthetics.
 
-**Key patterns:**
-- **Index pages**: `s-page` + `s-table` with `s-search-field` in filters slot
-- **Details pages**: `s-page` with `breadcrumb` + `data-save-bar` form + `slot="aside"`
-- **Settings pages**: `s-page` + `s-section` + `s-choice-list` / `s-switch`
+**App Bridge web components** (the `s-` prefixed ones like `s-app-nav`) are still available for:
+- `s-app-nav` - App navigation menu
+- `s-app-window` - Fullscreen modal windows
+- `data-save-bar` attribute on forms - Automatic save bar integration
+- Title bar - Admin title bar component
 
-## Custom Components
+For all other UI (buttons, tables, forms, cards, etc.), create custom Svelte components in `src/lib/components/`.
 
-Reusable Svelte components in `src/lib/components/`. Full documentation: [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md)
+Full documentation: [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md)
 
 | Component | Description |
 |-----------|-------------|

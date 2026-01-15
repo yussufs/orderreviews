@@ -1,5 +1,16 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import {
+		Page,
+		Card,
+		Button,
+		Banner,
+		DataTable,
+		Badge,
+		Text,
+		Spinner,
+		EmptyState
+	} from '$lib/components';
 
 	interface Puzzle {
 		id: string;
@@ -10,7 +21,6 @@
 		image: string;
 	}
 
-	// Mock data - replace with actual API call
 	const mockPuzzles: Puzzle[] = [
 		{
 			id: '1',
@@ -59,14 +69,13 @@
 	let error = $state<string | null>(null);
 
 	onMount(async () => {
-		// Simulate API loading
 		await new Promise((resolve) => setTimeout(resolve, 800));
 		puzzles = mockPuzzles;
 		isLoading = false;
 	});
 
-	function getStatusTone(status: string): string {
-		return status === 'active' ? 'success' : 'neutral';
+	function getStatusTone(status: string): 'success' | 'default' {
+		return status === 'active' ? 'success' : 'default';
 	}
 
 	function formatStatus(status: string): string {
@@ -78,99 +87,119 @@
 	<title>Puzzles</title>
 </svelte:head>
 
-<s-page heading="Puzzles">
-	<s-button slot="primary-action" variant="primary">Create puzzle</s-button>
-	<s-button slot="secondary-actions" variant="secondary">Export puzzles</s-button>
-	<s-button slot="secondary-actions" variant="secondary">Import puzzles</s-button>
+<Page title="Puzzles">
+	{#snippet primaryAction()}
+		<Button variant="primary">Create puzzle</Button>
+	{/snippet}
+
+	{#snippet secondaryActions()}
+		<Button>Export puzzles</Button>
+		<Button>Import puzzles</Button>
+	{/snippet}
 
 	{#if error}
-		<s-banner tone="critical" heading="Error loading puzzles">
+		<Banner tone="critical" title="Error loading puzzles">
 			{error}
-		</s-banner>
+		</Banner>
 	{/if}
 
 	{#if isLoading}
-		<s-box border="base" borderRadius="base" background="base">
-			<s-grid placeContent="center center" padding="large-500" minBlockSize="300px">
-				<s-stack alignItems="center" gap="base">
-					<s-spinner accessibilityLabel="Loading puzzles" size="large"></s-spinner>
-					<s-text>Loading puzzles...</s-text>
-				</s-stack>
-			</s-grid>
-		</s-box>
+		<Card>
+			<div class="loading-state">
+				<Spinner size="large" />
+				<Text>Loading puzzles...</Text>
+			</div>
+		</Card>
 	{:else if puzzles.length > 0}
-		<!-- Table -->
-		<s-section padding="none" accessibilityLabel="Puzzles table section">
-			<s-table>
-				<s-table-header-row>
-					<s-table-header listSlot="primary">Puzzle</s-table-header>
-					<s-table-header format="numeric">Pieces</s-table-header>
-					<s-table-header>Created</s-table-header>
-					<s-table-header listSlot="secondary">Status</s-table-header>
-				</s-table-header-row>
-				<s-table-body>
+		<Card padding="none">
+			<DataTable>
+				<thead>
+					<tr>
+						<th>Puzzle</th>
+						<th data-align="right">Pieces</th>
+						<th>Created</th>
+						<th>Status</th>
+					</tr>
+				</thead>
+				<tbody>
 					{#each puzzles as puzzle (puzzle.id)}
-						<s-table-row>
-							<s-table-cell>
-								<s-stack direction="inline" gap="small" alignItems="center">
-									<s-clickable
-										href="/app/puzzles/{puzzle.id}"
-										accessibilityLabel="{puzzle.name} puzzle thumbnail"
-										border="base"
-										borderRadius="base"
-										overflow="hidden"
-										inlineSize="40px"
-										blockSize="40px"
-									>
-										<s-image
-											objectFit="cover"
-											alt="{puzzle.name} puzzle thumbnail"
-											src={puzzle.image}
-										></s-image>
-									</s-clickable>
-									<s-link href="/app/puzzles/{puzzle.id}">{puzzle.name}</s-link>
-								</s-stack>
-							</s-table-cell>
-							<s-table-cell>{puzzle.pieces}</s-table-cell>
-							<s-table-cell>{puzzle.created}</s-table-cell>
-							<s-table-cell>
-								<s-badge color="base" tone={getStatusTone(puzzle.status)}>
+						<tr>
+							<td>
+								<div class="cell-content">
+									<a href="/app/puzzles/{puzzle.id}" class="thumbnail">
+										<img src={puzzle.image} alt="{puzzle.name} puzzle thumbnail" />
+									</a>
+									<a href="/app/puzzles/{puzzle.id}" class="puzzle-link">
+										{puzzle.name}
+									</a>
+								</div>
+							</td>
+							<td data-align="right">{puzzle.pieces}</td>
+							<td>{puzzle.created}</td>
+							<td>
+								<Badge tone={getStatusTone(puzzle.status)}>
 									{formatStatus(puzzle.status)}
-								</s-badge>
-							</s-table-cell>
-						</s-table-row>
+								</Badge>
+							</td>
+						</tr>
 					{/each}
-				</s-table-body>
-			</s-table>
-		</s-section>
+				</tbody>
+			</DataTable>
+		</Card>
 	{:else}
-		<!-- Empty state -->
-		<s-section accessibilityLabel="Empty state section">
-			<s-grid gap="base" justifyItems="center" paddingBlock="large-400">
-				<s-box maxInlineSize="200px" maxBlockSize="200px">
-					<s-image
-						aspectRatio="1/0.5"
-						src="https://cdn.shopify.com/static/images/polaris/patterns/callout.png"
-						alt="A stylized graphic of four characters, each holding a puzzle piece"
-					></s-image>
-				</s-box>
-				<s-grid justifyItems="center" maxInlineSize="450px" gap="base">
-					<s-stack alignItems="center">
-						<s-heading>Start creating puzzles</s-heading>
-						<s-paragraph>
-							Create and manage your collection of puzzles for players to enjoy.
-						</s-paragraph>
-					</s-stack>
-					<s-button-group>
-						<s-button slot="secondary-actions" accessibilityLabel="Learn more about creating puzzles">
-							Learn more
-						</s-button>
-						<s-button slot="primary-action" accessibilityLabel="Add a new puzzle">
-							Create puzzle
-						</s-button>
-					</s-button-group>
-				</s-grid>
-			</s-grid>
-		</s-section>
+		<Card>
+			<EmptyState
+				heading="Start creating puzzles"
+				description="Create and manage your collection of puzzles for players to enjoy."
+				image="https://cdn.shopify.com/static/images/polaris/patterns/callout.png"
+				imageAlt="Puzzle illustration"
+			>
+				<Button>Learn more</Button>
+				<Button variant="primary">Create puzzle</Button>
+			</EmptyState>
+		</Card>
 	{/if}
-</s-page>
+</Page>
+
+<style>
+	.loading-state {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: var(--space-400);
+		min-height: 300px;
+	}
+
+	.cell-content {
+		display: flex;
+		align-items: center;
+		gap: var(--space-200);
+	}
+
+	.thumbnail {
+		width: 40px;
+		height: 40px;
+		border-radius: var(--radius-md);
+		overflow: hidden;
+		flex-shrink: 0;
+		background: var(--color-bg-surface-secondary);
+		border: 1px solid var(--color-border);
+	}
+
+	.thumbnail img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.puzzle-link {
+		color: var(--color-text-info);
+		text-decoration: none;
+		font-weight: var(--font-weight-medium);
+	}
+
+	.puzzle-link:hover {
+		text-decoration: underline;
+	}
+</style>
