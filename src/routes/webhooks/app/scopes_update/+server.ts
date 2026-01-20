@@ -13,15 +13,19 @@ interface ScopesUpdatePayload {
 export const POST: RequestHandler = async ({ request }) => {
 	const { shop, payload } = await authenticateWebhook<ScopesUpdatePayload>(request);
 
-	const currentScopes = payload.current.join(',');
-	const sessionId = getOfflineSessionId(shop);
+	try {
+		const currentScopes = payload.current.join(',');
+		const sessionId = getOfflineSessionId(shop);
 
-	await db
-		.update(sessionTable)
-		.set({ scope: currentScopes })
-		.where(eq(sessionTable.id, sessionId));
+		await db
+			.update(sessionTable)
+			.set({ scope: currentScopes })
+			.where(eq(sessionTable.id, sessionId));
 
-	console.log(`Updated scopes for ${shop}: ${currentScopes}`);
+		console.log(`Updated scopes for ${shop}: ${currentScopes}`);
+	} catch (err) {
+		console.error('Error updating scopes:', err);
+	}
 
 	return new Response();
 };
