@@ -1,33 +1,21 @@
-import { json, error } from '@sveltejs/kit';
+import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { shopify, getOfflineSessionId } from '$lib/server/shopify';
-import { createAdmin } from '$lib/server/shopify/graphql';
+import { authenticateRequest, AuthError } from '$lib/server/shopify/auth';
 
 export const GET: RequestHandler = async ({ request, url }) => {
-	const authHeader = request.headers.get('authorization');
-
-	if (!authHeader?.startsWith('Bearer ')) {
-		error(401, 'Unauthorized');
-	}
-
-	const token = authHeader.substring(7);
 	const searchQuery = url.searchParams.get('search') || '';
 
-	let session;
+	let admin;
 	try {
-		const payload = await shopify.api.session.decodeSessionToken(token);
-		const shop = payload.dest.replace('https://', '');
-		const sessionId = getOfflineSessionId(shop);
-		session = await shopify.sessionStorage.loadSession(sessionId);
-
-		if (!session || !session.accessToken) {
-			error(401, 'Session not found');
-		}
-	} catch {
-		error(401, 'Invalid session token');
+		const auth = await authenticateRequest(request);
+		admin = auth.admin;
+	} catch (err) {
+		const status = err instanceof AuthError ? 401 : 500;
+		return json({ error: 'Unauthorized' }, {
+			status,
+			headers: { 'X-Shopify-Retry-Invalid-Session-Request': '1' }
+		});
 	}
-
-	const admin = createAdmin(session);
 
 	try {
 		const response = await admin.graphql(

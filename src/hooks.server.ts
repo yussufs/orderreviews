@@ -1,7 +1,8 @@
-import type { Handle, RequestEvent } from '@sveltejs/kit';
-import { redirect } from '@sveltejs/kit';
-import { shopify, getOfflineSessionId } from '$lib/server/shopify';
-import { createAdmin } from '$lib/server/shopify/graphql';
+import type { Handle } from '@sveltejs/kit';
+import { authenticateRequest, getShopFromRequest, AuthError } from '$lib/server/shopify/auth';
+import { shopify } from '$lib/server/shopify';
+
+const RETRY_HEADER = 'X-Shopify-Retry-Invalid-Session-Request';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const { url } = event;
@@ -13,117 +14,58 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Handle /app/* routes (embedded app pages)
 	if (url.pathname.startsWith('/app')) {
-		const shop = getShopFromRequest(event);
-		const host = url.searchParams.get('host');
+		const authHeader = event.request.headers.get('authorization');
 
-		// If we have a shop but no host param, redirect through Shopify Admin
-		// to re-establish the embedded iframe context.
-		// This matches the Django app's encoded_host check pattern.
-		if (shop && !host) {
-			const apiKey = shopify.api.config.apiKey;
-			redirect(302, `https://${shop}/admin/apps/${apiKey}`);
-		}
+		// Get token from either Authorization header (XHR) or id_token query param (initial load)
+		const idToken = url.searchParams.get('id_token');
 
-		const authenticated = await authenticateAdmin(event);
-
-		if (!authenticated) {
-			// For embedded apps, redirect to OAuth
-			if (shop) {
-				redirect(302, `/auth?shop=${encodeURIComponent(shop)}`);
+		if (authHeader?.startsWith('Bearer ') || idToken) {
+			try {
+				const { session, admin } = await authenticateRequest(
+					event.request,
+					idToken || undefined
+				);
+				event.locals.shopify = { session, admin };
+			} catch (err) {
+				console.error('Auth failed:', err);
+				// Only return 401 for XHR requests (with Authorization header)
+				// Document requests should fall through to render the page with App Bridge
+				if (authHeader) {
+					return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+						status: 401,
+						headers: {
+							'Content-Type': 'application/json',
+							[RETRY_HEADER]: '1'
+						}
+					});
+				}
 			}
-			redirect(302, '/auth/login');
 		}
+		// Document requests without a token pass through to SvelteKit normally.
+		// The layout loads App Bridge via <meta name="shopify-api-key">, and App Bridge
+		// reads shop/host from the URL params that Shopify Admin passes in the iframe.
+		// App Bridge then handles session token injection for all subsequent fetches.
+
+		// Resolve with dynamic CSP for the authenticated shop
+		const shop =
+			event.locals.shopify?.session?.shop || getShopFromRequest(event);
+		const response = await resolve(event);
+		if (shop) {
+			response.headers.set(
+				'Content-Security-Policy',
+				`frame-ancestors https://${shop} https://admin.shopify.com;`
+			);
+		}
+		return response;
 	}
 
 	return resolve(event);
 };
 
 function isPublicRoute(pathname: string): boolean {
-	const publicRoutes = ['/auth', '/webhooks', '/'];
+	const publicRoutes = ['/webhooks', '/'];
 
-	// Check exact matches and prefix matches
 	return publicRoutes.some(
 		(route) => pathname === route || (route !== '/' && pathname.startsWith(route + '/'))
 	);
-}
-
-async function authenticateAdmin(event: RequestEvent): Promise<boolean> {
-	try {
-		// For embedded apps, check for session token in Authorization header
-		const authHeader = event.request.headers.get('authorization');
-
-		if (authHeader?.startsWith('Bearer ')) {
-			const token = authHeader.substring(7);
-
-			try {
-				// Decode and validate the session token
-				const payload = await shopify.api.session.decodeSessionToken(token);
-
-				// Get the offline session for this shop
-				const shop = payload.dest.replace('https://', '');
-				const sessionId = getOfflineSessionId(shop);
-				const session = await shopify.sessionStorage.loadSession(sessionId);
-
-				if (session && session.accessToken) {
-					// Check if session has required scopes
-					const requiredScopes = shopify.api.config.scopes;
-					if (requiredScopes && session.scope) {
-						const sessionScopes = session.scope.split(',').map((s: string) => s.trim());
-						const requiredScopesArray = requiredScopes.toArray();
-						const hasScopes = requiredScopesArray.every((scope: string) =>
-							sessionScopes.includes(scope)
-						);
-						if (!hasScopes) {
-							return false;
-						}
-					}
-
-					// Create admin client and attach to locals
-					const admin = createAdmin(session);
-					event.locals.shopify = { session, admin };
-					return true;
-				}
-			} catch (tokenError) {
-				console.error('Session token validation failed:', tokenError);
-			}
-		}
-
-		// Fallback: Check for shop in query params (initial load from Shopify Admin)
-		const shop = getShopFromRequest(event);
-		if (shop) {
-			const sessionId = getOfflineSessionId(shop);
-			const session = await shopify.sessionStorage.loadSession(sessionId);
-
-			if (session && session.accessToken) {
-				const admin = createAdmin(session);
-				event.locals.shopify = { session, admin };
-				return true;
-			}
-		}
-
-		return false;
-	} catch (err) {
-		console.error('Authentication error:', err);
-		return false;
-	}
-}
-
-function getShopFromRequest(event: RequestEvent): string | null {
-	// Check query params first
-	const shop = event.url.searchParams.get('shop');
-	if (shop) return shop;
-
-	// Check for host param (Shopify embeds this in iframes)
-	const host = event.url.searchParams.get('host');
-	if (host) {
-		try {
-			const decoded = atob(host);
-			const match = decoded.match(/([^/]+\.myshopify\.com)/);
-			if (match) return match[1];
-		} catch {
-			// Invalid base64, ignore
-		}
-	}
-
-	return null;
 }

@@ -23,9 +23,10 @@ api_version = "2026-04"
   topics = [ "app/uninstalled" ]
   uri = "/webhooks/app/uninstalled"
 
+[auth]
+redirect_urls = [ "https://example.com/auth/callback" ]
+
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "write_products"
-
-[auth]
-redirect_urls = [ "https://your-app.com/auth/callback" ]
+use_legacy_install_flow = false
