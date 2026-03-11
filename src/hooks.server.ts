@@ -13,11 +13,21 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// Handle /app/* routes (embedded app pages)
 	if (url.pathname.startsWith('/app')) {
+		const shop = getShopFromRequest(event);
+		const host = url.searchParams.get('host');
+
+		// If we have a shop but no host param, redirect through Shopify Admin
+		// to re-establish the embedded iframe context.
+		// This matches the Django app's encoded_host check pattern.
+		if (shop && !host) {
+			const apiKey = shopify.api.config.apiKey;
+			redirect(302, `https://${shop}/admin/apps/${apiKey}`);
+		}
+
 		const authenticated = await authenticateAdmin(event);
 
 		if (!authenticated) {
 			// For embedded apps, redirect to OAuth
-			const shop = getShopFromRequest(event);
 			if (shop) {
 				redirect(302, `/auth?shop=${encodeURIComponent(shop)}`);
 			}

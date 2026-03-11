@@ -103,15 +103,17 @@ export const GET: RequestHandler = async ({ url }) => {
 
 		await shopify.sessionStorage.storeSession(session);
 
-		// Redirect to app page with shop and host params
-		const appUrl = env.SHOPIFY_APP_URL || env.HOST || `https://${config.hostName}`;
-		const redirectUrl = new URL('/app', appUrl);
-		redirectUrl.searchParams.set('shop', shop);
+		// Redirect back into the Shopify Admin embedded iframe context.
+		// After OAuth, the browser is outside the iframe, so we must redirect
+		// through Shopify Admin to re-establish the embedded app context.
+		// This matches the Django app's bounce-page pattern.
 		if (host) {
-			redirectUrl.searchParams.set('host', host);
+			const decodedHost = Buffer.from(host, 'base64').toString('utf-8');
+			redirect(302, `https://${decodedHost}/apps/${config.apiKey}`);
 		}
 
-		redirect(302, redirectUrl.toString());
+		// Fallback: redirect via shop admin URL if no host param
+		redirect(302, `https://${shop}/admin/apps/${config.apiKey}`);
 	} catch (err) {
 		// Re-throw SvelteKit redirects and errors
 		if (err && typeof err === 'object' && 'status' in err) {
