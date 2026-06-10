@@ -75,13 +75,16 @@ async function performTokenExchange(
 
 	const response = await fetch(`https://${shop}/admin/oauth/access_token`, {
 		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded',
+			'Accept': 'application/json'
+		},
+		body: new URLSearchParams({
 			client_id: config.apiKey,
 			client_secret: config.apiSecretKey,
 			grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
 			subject_token: sessionToken,
-			subject_token_type: 'urn:ietf:params:oauth:token-type:id-token',
+			subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
 			requested_token_type: 'urn:shopify:params:oauth:token-type:offline-access-token'
 		})
 	});

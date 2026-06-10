@@ -90,19 +90,12 @@ const mockPuzzles: Record<string, Puzzle> = {
 	}
 };
 
-export const load: PageServerLoad = async ({ locals, params }) => {
-	if (!locals.shopify) {
-		error(401, 'Not authenticated');
-	}
-
+export const load: PageServerLoad = async ({ params }) => {
 	const puzzle = mockPuzzles[params.id];
 
 	if (!puzzle) {
 		error(404, 'Puzzle not found');
 	}
 
-	return {
-		shop: locals.shopify.session.shop,
-		puzzle
-	};
+	return { puzzle };
 };

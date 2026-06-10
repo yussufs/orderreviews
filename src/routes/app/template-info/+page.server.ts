@@ -154,14 +154,8 @@ async function createSampleProduct(client: AdminClient): Promise<CreateProductRe
 	}
 }
 
-export const load: PageServerLoad = async ({ locals }) => {
-	if (!locals.shopify) {
-		error(401, 'Not authenticated');
-	}
-
-	return {
-		shop: locals.shopify.session.shop
-	};
+export const load: PageServerLoad = async () => {
+	return {};
 };
 
 export const actions: Actions = {
