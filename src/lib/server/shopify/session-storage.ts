@@ -29,7 +29,11 @@ export class DrizzleSessionStorage implements SessionStorage {
 			accountOwner: session.onlineAccessInfo?.associated_user?.account_owner ?? false,
 			locale: session.onlineAccessInfo?.associated_user?.locale ?? null,
 			collaborator: session.onlineAccessInfo?.associated_user?.collaborator ?? false,
-			emailVerified: session.onlineAccessInfo?.associated_user?.email_verified ?? false
+			emailVerified: session.onlineAccessInfo?.associated_user?.email_verified ?? false,
+			// Expiring offline token support: persist both tokens together so a
+			// rotated refresh token is never lost (see getOfflineSession).
+			refreshToken: session.refreshToken ?? null,
+			refreshTokenExpires: session.refreshTokenExpires ?? null
 		};
 
 		await db.insert(sessionTable).values(sessionData).onConflictDoUpdate({
@@ -77,6 +81,8 @@ export class DrizzleSessionStorage implements SessionStorage {
 			scope: row.scope ?? undefined,
 			expires: row.expires ?? undefined,
 			accessToken: row.accessToken,
+			refreshToken: row.refreshToken ?? undefined,
+			refreshTokenExpires: row.refreshTokenExpires ?? undefined,
 			onlineAccessInfo: row.userId
 				? {
 						expires_in: 0,

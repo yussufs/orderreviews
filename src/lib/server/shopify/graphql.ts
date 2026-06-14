@@ -86,13 +86,32 @@ export function createAdmin(session: Session): AdminClient {
 
 	return {
 		session,
-		async graphql<TData = unknown, TVariables extends Record<string, unknown> = Record<string, unknown>>(
-			query: string,
-			options?: GraphQLOptions<TVariables>
-		): Promise<GraphQLResponse<TData>> {
-			const response = await client.request<TData>(query, {
-				variables: options?.variables
-			});
+		async graphql<
+			TData = unknown,
+			TVariables extends Record<string, unknown> = Record<string, unknown>
+		>(query: string, options?: GraphQLOptions<TVariables>): Promise<GraphQLResponse<TData>> {
+			let response;
+			try {
+				response = await client.request<TData>(query, {
+					variables: options?.variables
+				});
+			} catch (err) {
+				// The shopify-api client masks the 403 returned for retired
+				// non-expiring offline tokens as a bare "Forbidden" with an empty
+				// body, so it looks like an unrelated permissions error. Surface the
+				// real cause to make this debuggable.
+				const status = (err as { response?: { code?: number } })?.response?.code;
+				if (status === 403) {
+					console.error(
+						`Admin API returned 403 for ${session.shop}. If this shop still ` +
+							`uses a non-expiring offline token, it has been retired — the token ` +
+							`must be re-issued via token exchange (request path) or migrated/` +
+							`refreshed via getOfflineSession() (background path).`,
+						(err as { response?: unknown }).response
+					);
+				}
+				throw err;
+			}
 
 			// The Shopify client returns the response directly (already parsed)
 			return {

@@ -166,6 +166,43 @@ See `src/routes/app/products/` and `src/routes/api/products/` for a complete exa
 3. Valid sessions get `locals.shopify.admin` GraphQL client
 4. Invalid sessions redirect to OAuth at `/auth`
 
+## Expiring Offline Access Tokens
+
+Shopify is retiring non-expiring offline Admin API tokens (enforced for new
+public apps from April 1, 2026; all public apps by January 1, 2027). This
+template uses expiring tokens end-to-end. Offline access tokens last **1 hour**;
+the **90-day** refresh token rotates on every use (the old one is invalidated
+immediately). Both are stored on the `session` table (`refresh_token`,
+`refresh_token_expires`) by `session-storage.ts`.
+
+There are two code paths, both in `src/lib/server/shopify/auth.ts`:
+
+- **Request path** (`authenticateRequest`): every embedded request carries an
+  `id_token`, so when the stored session is missing a refresh token, expired
+  (with a ~5 min buffer), or short on scopes, it just re-runs **token exchange**
+  with `expiring: true`. No manual refresh logic needed here.
+- **Background path** (`getOfflineSession(shop)`): webhooks, cron jobs, and queue
+  workers have **no** `id_token`. They must obtain their admin client through
+  `getOfflineSession`, which migrates legacy tokens in place
+  (`migrateToExpiringToken`), refreshes near-expiry tokens (`refreshToken`), and
+  throws "merchant must reopen the app" when the refresh token itself is gone or
+  expired. **Never** read `session.accessToken` straight from storage in
+  background code.
+
+Gotchas:
+
+- **Always pass `expiring: true`** to `tokenExchange` — without it Shopify still
+  issues a legacy non-expiring token.
+- **Token rotation race**: each refresh invalidates the previous refresh token.
+  `storeSession` writes the new access + refresh token in one atomic upsert;
+  multi-instance deployments should additionally wrap the refresh in a per-shop
+  lock (e.g. a Postgres advisory lock).
+- **403 masquerade**: a retired token fails with HTTP 403
+  (`[API] Non-expiring access tokens are no longer accepted`), but the GraphQL
+  client surfaces only "Forbidden". `graphql.ts` logs the real cause on 403.
+- **90-day idle limit**: a shop never opened and with no background activity for
+  90 days needs the merchant to relaunch the app.
+
 ## No Cookies in Admin UI Apps
 
 **Never rely on cookies to store or persist state in embedded admin UI apps.**
