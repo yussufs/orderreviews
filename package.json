@@ -16,6 +16,8 @@
 		"format": "prettier --write .",
 		"lint": "prettier --check .",
 		"typecheck": "tsc --noEmit",
+		"test": "vitest run",
+		"test:watch": "vitest",
 		"graphql-codegen": "graphql-codegen",
 		"graphql-codegen:watch": "graphql-codegen --watch",
 		"db:push": "drizzle-kit push",
@@ -42,7 +44,8 @@
 		"svelte-check": "^4.3.4",
 		"typescript": "^5.9.3",
 		"vite": "^7.2.6",
-		"vite-node": "^5.3.0"
+		"vite-node": "^5.3.0",
+		"vitest": "^4.1.9"
 	},
 	"dependencies": {
 		"@shopify/admin-api-client": "^1.1.1",

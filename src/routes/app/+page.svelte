@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { Page, Card, Button, Banner, Text, Badge, Divider, Checkbox, Icon } from '$lib/components';
+	import {
+		Page,
+		Card,
+		Button,
+		Banner,
+		Text,
+		Badge,
+		Divider,
+		Checkbox,
+		Icon
+	} from '$lib/components';
 
 	let visible = $state({
 		banner: true,
@@ -40,8 +50,8 @@
 	<!-- Banner -->
 	{#if visible.banner}
 		<Banner tone="info" dismissible ondismiss={() => (visible.banner = false)}>
-			3 of 5 puzzles created. <a href="#" class="banner-link">Upgrade to Puzzlify Pro</a> to create
-			unlimited puzzles.
+			3 of 5 puzzles created. <a href="#" class="banner-link">Upgrade to Puzzlify Pro</a> to create unlimited
+			puzzles.
 		</Banner>
 	{/if}
 
@@ -49,11 +59,7 @@
 	{#if visible.setupGuide}
 		<Card>
 			{#snippet actions()}
-				<Button
-					variant="tertiary"
-					iconOnly
-					onclick={() => (visible.setupGuide = false)}
-				>
+				<Button variant="tertiary" iconOnly onclick={() => (visible.setupGuide = false)}>
 					{#snippet icon()}<Icon name="x" />{/snippet}
 				</Button>
 				<Button
@@ -68,7 +74,9 @@
 			{/snippet}
 			<div class="setup-header">
 				<Text variant="headingMd">Setup Guide</Text>
-				<Text as="p" tone="subdued">Use this personalized guide to get your store ready for sales.</Text>
+				<Text as="p" tone="subdued"
+					>Use this personalized guide to get your store ready for sales.</Text
+				>
 				<Text as="p" variant="bodySm" tone="subdued">{progress} out of 3 steps completed</Text>
 			</div>
 
@@ -96,8 +104,8 @@
 							<div class="step-content">
 								<div class="step-details">
 									<Text as="p">
-										Start by uploading a high-quality image that will be used to create your
-										puzzle. For best results, use images that are at least 1200x1200 pixels.
+										Start by uploading a high-quality image that will be used to create your puzzle.
+										For best results, use images that are at least 1200x1200 pixels.
 									</Text>
 									<div class="step-actions">
 										<Button variant="primary">Upload image</Button>
@@ -118,11 +126,7 @@
 					<!-- Step 2 -->
 					<div class="setup-step">
 						<div class="step-header">
-							<Checkbox
-								label="Choose a puzzle template"
-								name="step2"
-								onchange={updateProgress}
-							/>
+							<Checkbox label="Choose a puzzle template" name="step2" onchange={updateProgress} />
 							<Button
 								variant="tertiary"
 								iconOnly
@@ -137,8 +141,8 @@
 							<div class="step-content">
 								<div class="step-details">
 									<Text as="p">
-										Select a template for your puzzle - choose between 9-piece (beginner),
-										16-piece (intermediate), or 25-piece (advanced) layouts.
+										Select a template for your puzzle - choose between 9-piece (beginner), 16-piece
+										(intermediate), or 25-piece (advanced) layouts.
 									</Text>
 									<div class="step-actions">
 										<Button variant="primary">Choose template</Button>
@@ -178,8 +182,8 @@
 							<div class="step-content">
 								<div class="step-details">
 									<Text as="p">
-										Make your puzzle unique by customizing the shapes of individual pieces.
-										Choose from classic, curved, or themed piece styles.
+										Make your puzzle unique by customizing the shapes of individual pieces. Choose
+										from classic, curved, or themed piece styles.
 									</Text>
 									<div class="step-actions">
 										<Button variant="primary">Customize pieces</Button>
@@ -236,11 +240,7 @@
 	{#if visible.calloutCard}
 		<Card>
 			{#snippet actions()}
-				<Button
-					variant="tertiary"
-					iconOnly
-					onclick={() => (visible.calloutCard = false)}
-				>
+				<Button variant="tertiary" iconOnly onclick={() => (visible.calloutCard = false)}>
 					{#snippet icon()}<Icon name="x" />{/snippet}
 				</Button>
 			{/snippet}
@@ -336,11 +336,7 @@
 	{#if visible.featuredApps}
 		<Card title="Featured apps">
 			{#snippet actions()}
-				<Button
-					variant="tertiary"
-					iconOnly
-					onclick={() => (visible.featuredApps = false)}
-				>
+				<Button variant="tertiary" iconOnly onclick={() => (visible.featuredApps = false)}>
 					{#snippet icon()}<Icon name="x" />{/snippet}
 				</Button>
 			{/snippet}
@@ -354,7 +350,9 @@
 					<div class="app-info">
 						<Text variant="headingSm">Shopify Flow</Text>
 						<Text variant="bodySm" tone="subdued">Free</Text>
-						<Text variant="bodySm" tone="subdued">Automate everything and get back to business.</Text>
+						<Text variant="bodySm" tone="subdued"
+							>Automate everything and get back to business.</Text
+						>
 					</div>
 					<Button variant="tertiary" iconOnly>
 						{#snippet icon()}<Icon name="download" />{/snippet}

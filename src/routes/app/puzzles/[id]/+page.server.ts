@@ -21,7 +21,8 @@ const mockPuzzles: Record<string, Puzzle> = {
 	'1': {
 		id: '1',
 		name: 'Mountain View',
-		description: 'A beautiful mountain landscape puzzle featuring snow-capped peaks and lush green valleys.',
+		description:
+			'A beautiful mountain landscape puzzle featuring snow-capped peaks and lush green valleys.',
 		pieces: 16,
 		size: 'medium',
 		material: 'cardboard',
@@ -35,7 +36,8 @@ const mockPuzzles: Record<string, Puzzle> = {
 	'2': {
 		id: '2',
 		name: 'Ocean Sunset',
-		description: 'Capture the serene beauty of a sunset over the ocean with vibrant oranges and deep blues.',
+		description:
+			'Capture the serene beauty of a sunset over the ocean with vibrant oranges and deep blues.',
 		pieces: 9,
 		size: 'small',
 		material: 'wood',
@@ -63,7 +65,8 @@ const mockPuzzles: Record<string, Puzzle> = {
 	'4': {
 		id: '4',
 		name: 'City Skyline',
-		description: 'A stunning nighttime cityscape featuring illuminated skyscrapers and city lights.',
+		description:
+			'A stunning nighttime cityscape featuring illuminated skyscrapers and city lights.',
 		pieces: 36,
 		size: 'large',
 		material: 'premium',

@@ -245,10 +245,7 @@
 				<Text tone="subdued">No products found matching "{searchQuery}"</Text>
 			</div>
 		{:else}
-			<EmptyState
-				heading="No products yet"
-				description="Add products to start selling"
-			>
+			<EmptyState heading="No products yet" description="Add products to start selling">
 				<Button variant="primary" href="shopify://admin/products/new">Add product</Button>
 			</EmptyState>
 		{/if}

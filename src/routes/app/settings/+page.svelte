@@ -1,5 +1,15 @@
 <script lang="ts">
-	import { Page, Card, Button, TextField, Select, Text, Divider, Icon, Checkbox } from '$lib/components';
+	import {
+		Page,
+		Card,
+		Button,
+		TextField,
+		Select,
+		Text,
+		Divider,
+		Icon,
+		Checkbox
+	} from '$lib/components';
 
 	function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
@@ -71,11 +81,7 @@
 						value="new-order"
 						checked
 					/>
-					<Checkbox
-						label="Low stock alerts"
-						name="notifications-low-stock"
-						value="low-stock"
-					/>
+					<Checkbox label="Low stock alerts" name="notifications-low-stock" value="low-stock" />
 					<Checkbox
 						label="Customer review notifications"
 						name="notifications-customer-review"
@@ -96,9 +102,7 @@
 				<a href="/app/settings/shipping" class="nav-item">
 					<div class="nav-item-content">
 						<Text variant="headingSm">Shipping & fulfillment</Text>
-						<Text tone="subdued">
-							Shipping methods, rates, zones, and fulfillment preferences.
-						</Text>
+						<Text tone="subdued">Shipping methods, rates, zones, and fulfillment preferences.</Text>
 					</div>
 					<Icon name="chevron-right" tone="subdued" />
 				</a>

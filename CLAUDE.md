@@ -42,14 +42,18 @@ shopify app dev           # Start with Shopify CLI (recommended)
 The following MCP servers are configured for documentation lookup and development assistance:
 
 ### Svelte MCP
+
 Official Svelte MCP server for Svelte 5 and SvelteKit documentation:
+
 - **list-sections**: Discover available documentation sections. Use FIRST when asked about Svelte/SvelteKit topics.
 - **get-documentation**: Retrieve full documentation for specific sections.
 - **svelte-autofixer**: Analyze Svelte code for issues. Use when writing Svelte components.
 - **playground-link**: Generate Svelte Playground links (only when requested by user).
 
 ### Shopify Dev MCP
+
 Official Shopify MCP server for Shopify development:
+
 - **learn_shopify_api**: Initialize context for a specific Shopify API (Admin, Storefront, Functions, Polaris, Liquid, etc.)
 - **search_docs_chunks**: Search Shopify developer documentation
 - **fetch_full_docs**: Retrieve full documentation pages from shopify.dev
@@ -58,17 +62,22 @@ Official Shopify MCP server for Shopify development:
 - **validate_component_codeblocks**: Validate Polaris component usage (for Polaris-based projects)
 
 ### Context7 MCP
+
 Up-to-date documentation for any library:
+
 - **resolve-library-id**: Find the Context7 library ID for a package
 - **query-docs**: Retrieve documentation and code examples for any library
 
 ### Browser MCP
+
 Browser automation for testing and debugging:
+
 - **browser_navigate**, **browser_snapshot**, **browser_click**, etc.
 
 ## Shopify Questions
 
 Always use the `/shopify` skill for ANY question about:
+
 - Shopify APIs (Admin, Storefront, Partner, etc.)
 - GraphQL queries/mutations for Shopify
 - Liquid themes
@@ -85,7 +94,7 @@ Use the `#graphql` tag for type generation:
 
 ```typescript
 const response = await admin.graphql(
-  `#graphql
+	`#graphql
     query GetShop {
       shop { name }
     }
@@ -102,6 +111,7 @@ After adding new queries, run `pnpm run graphql-codegen`.
 Instead, use the async client-side pattern:
 
 ### 1. Page Server Load (`+page.server.ts`)
+
 Return minimal data - just validate auth and pass essential info:
 
 ```typescript
@@ -115,6 +125,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 ```
 
 ### 2. API Endpoint (`/api/[resource]/+server.ts`)
+
 Put GraphQL queries in API endpoints:
 
 ```typescript
@@ -131,6 +142,7 @@ export const GET: RequestHandler = async ({ request }) => {
 ```
 
 ### 3. Svelte Page (`+page.svelte`)
+
 Fetch data client-side with loading states:
 
 ```svelte
@@ -152,6 +164,7 @@ Fetch data client-side with loading states:
 ```
 
 ### Benefits
+
 - **Faster initial page load**: Page renders immediately with loading state
 - **Better UX**: Users see the page structure while data loads
 - **Reusable endpoints**: API routes can be used by multiple pages
@@ -229,11 +242,91 @@ Use these instead:
 When building any new admin UI feature, confirm it works end-to-end with
 browser cookies disabled before considering it done.
 
+## Admin / Theme-Editor Deep Links
+
+**From an embedded app, never link to `{shop}.myshopify.com/admin/...` with
+`_blank`. Always build `https://admin.shopify.com/store/{handle}/...` and open it
+with `_top` (or an anchor with `target="_top"`).**
+
+The app runs in an iframe on `admin.shopify.com`. A button that opens a Shopify
+admin URL — e.g. a theme-editor deep link to add an app block or activate an app
+embed — silently fails in two compounding ways unless both rules below are met.
+The editor opens, but the block isn't added / the embed isn't toggled. (Pasting
+the same resolved URL into the address bar works, which makes this easy to
+misdiagnose — there's no iframe and no redirect there.)
+
+1. **Wrong host.** Building against the legacy `{shop}.myshopify.com/admin/...`
+   host causes a cross-host redirect to `admin.shopify.com/store/{handle}/...`
+   that **drops the deep-link query params** (`addAppBlockId`, `activateAppId`,
+   `context=apps`, `target`).
+2. **Wrong navigation target.** `window.open(url, '_blank')` from the sandboxed
+   iframe is the wrong primitive — unreliable (popup blocking / a fresh
+   top-level nav through the redirect). Admin links must drive the **top frame**.
+
+### Always use the helpers — don't hand-build these URLs
+
+`src/lib/admin-links.ts` is the single sanctioned way to build and open these
+links (the store handle, your `client_id`/`apiKey`, and the shop domain are all
+available client-side via the `/app` layout `data.apiKey` / `data.shop`):
+
+```svelte
+<script lang="ts">
+	import { AdminLink } from '$lib/components';
+	import { addAppBlockUrl, activateAppEmbedUrl, openAdminLink } from '$lib/admin-links';
+
+	let { data } = $props(); // data.shop, data.apiKey from /app layout
+
+	const addBlock = addAppBlockUrl({
+		shop: data.shop,
+		apiKey: data.apiKey,
+		handle: 'star-rating', // blocks/star-rating.liquid -> "star-rating"
+		template: 'product'
+	});
+</script>
+
+<!-- Preferred: a real anchor targeting the top frame -->
+<AdminLink href={addBlock}>Add the review block</AdminLink>
+
+<!-- Programmatic (e.g. inside an onclick): -->
+<button
+	onclick={() =>
+		openAdminLink(
+			activateAppEmbedUrl({ shop: data.shop, apiKey: data.apiKey, handle: 'analytics' })
+		)}
+>
+	Activate app embed
+</button>
+```
+
+Do **not** reach for `<Link external>` for admin destinations — it renders
+`target="_blank"`, the wrong primitive here. Use `<AdminLink>` (renders
+`target="_top"`) or `openAdminLink()`.
+
+**Trade-off:** `_top` replaces the embedded app view with the destination in the
+same tab; the merchant returns via the browser/admin back button. This is the
+documented, reliable behaviour for admin destinations.
+
+### Deep-link param reference (theme app extensions)
+
+- **Add app block:**
+  `…/themes/current/editor?template={template}&addAppBlockId={api_key}/{handle}&target=newAppsSection`
+- **Activate app embed:**
+  `…/themes/current/editor?context=apps&activateAppId={api_key}/{handle}`
+- `{api_key}` = your app's `client_id` / `SHOPIFY_API_KEY` (the extension uuid
+  form is deprecated — use `client_id`).
+- `{handle}` = the block's liquid filename without `.liquid`
+  (`blocks/foo.liquid` → `foo`).
+- `target=newAppsSection` is the only target **all** JSON templates are
+  guaranteed to support. `mainSection` silently falls back on templates whose
+  main section doesn't accept app blocks (e.g. `cart`), so `addAppBlockUrl`
+  defaults to `newAppsSection`.
+
 ## UI Components
 
 This project uses custom Svelte components instead of Polaris web components. Build your own components styled to match Shopify admin aesthetics.
 
 **App Bridge web components** (the `s-` prefixed ones like `s-app-nav`) are still available for:
+
 - `s-app-nav` - App navigation menu
 - `s-app-window` - Fullscreen modal windows
 - `data-save-bar` attribute on forms - Automatic save bar integration
@@ -243,26 +336,26 @@ For all other UI (buttons, tables, forms, cards, etc.), create custom Svelte com
 
 Full documentation: [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md)
 
-| Component | Description |
-|-----------|-------------|
-| `Page` | Main page container with header, actions, and aside layout |
-| `Card` | Content container with title, actions, and footer slots |
-| `Button` | Versatile button with variants, tones, and link support |
-| `TextField` | Text input with label, validation, prefix/suffix |
-| `Select` | Dropdown select input |
-| `Checkbox` | Checkbox input with label and help text |
-| `Switch` | Toggle switch for boolean settings |
-| `SearchField` | Search input with clear button |
-| `DataTable` | Table component with styling |
-| `Badge` | Status badge with color tones |
-| `Banner` | Alert/notification banner |
-| `Spinner` | Loading spinner |
-| `Skeleton` | Loading placeholder with shimmer animation |
-| `Text` | Typography component with variants |
-| `Link` | Styled link component |
-| `Divider` | Horizontal divider line |
-| `Icon` | SVG icon component |
-| `EmptyState` | Empty state placeholder |
+| Component     | Description                                                |
+| ------------- | ---------------------------------------------------------- |
+| `Page`        | Main page container with header, actions, and aside layout |
+| `Card`        | Content container with title, actions, and footer slots    |
+| `Button`      | Versatile button with variants, tones, and link support    |
+| `TextField`   | Text input with label, validation, prefix/suffix           |
+| `Select`      | Dropdown select input                                      |
+| `Checkbox`    | Checkbox input with label and help text                    |
+| `Switch`      | Toggle switch for boolean settings                         |
+| `SearchField` | Search input with clear button                             |
+| `DataTable`   | Table component with styling                               |
+| `Badge`       | Status badge with color tones                              |
+| `Banner`      | Alert/notification banner                                  |
+| `Spinner`     | Loading spinner                                            |
+| `Skeleton`    | Loading placeholder with shimmer animation                 |
+| `Text`        | Typography component with variants                         |
+| `Link`        | Styled link component                                      |
+| `Divider`     | Horizontal divider line                                    |
+| `Icon`        | SVG icon component                                         |
+| `EmptyState`  | Empty state placeholder                                    |
 
 ## Code Style (Prettier)
 

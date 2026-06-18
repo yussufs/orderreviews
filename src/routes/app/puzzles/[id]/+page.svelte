@@ -111,10 +111,7 @@
 </svelte:head>
 
 <form data-save-bar onsubmit={handleSubmit}>
-	<Page
-		title={puzzle.name}
-		backAction={{ url: '/app/puzzles', label: 'Puzzles' }}
-	>
+	<Page title={puzzle.name} backAction={{ url: '/app/puzzles', label: 'Puzzles' }}>
 		{#snippet primaryAction()}
 			<Button variant="primary" type="submit">Save</Button>
 		{/snippet}
@@ -196,8 +193,18 @@
 		<Card title="Puzzle settings">
 			<div class="form-stack">
 				<Select label="Size" name="size" options={sizeOptions} value={puzzle.size} />
-				<Select label="Piece count" name="pieces" options={pieceOptions} value={String(puzzle.pieces)} />
-				<Select label="Material" name="material" options={materialOptions} value={puzzle.material} />
+				<Select
+					label="Piece count"
+					name="pieces"
+					options={pieceOptions}
+					value={String(puzzle.pieces)}
+				/>
+				<Select
+					label="Material"
+					name="material"
+					options={materialOptions}
+					value={puzzle.material}
+				/>
 			</div>
 		</Card>
 
@@ -284,12 +291,7 @@
 			<div class="form-stack">
 				<div class="radio-group">
 					<label class="radio-label">
-						<input
-							type="radio"
-							name="status"
-							value="active"
-							checked={puzzle.status === 'active'}
-						/>
+						<input type="radio" name="status" value="active" checked={puzzle.status === 'active'} />
 						<span>Active</span>
 					</label>
 					<label class="radio-label">

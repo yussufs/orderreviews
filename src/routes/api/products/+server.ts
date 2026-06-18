@@ -11,10 +11,13 @@ export const GET: RequestHandler = async ({ request, url }) => {
 		admin = auth.admin;
 	} catch (err) {
 		const status = err instanceof AuthError ? 401 : 500;
-		return json({ error: 'Unauthorized' }, {
-			status,
-			headers: { 'X-Shopify-Retry-Invalid-Session-Request': '1' }
-		});
+		return json(
+			{ error: 'Unauthorized' },
+			{
+				status,
+				headers: { 'X-Shopify-Retry-Invalid-Session-Request': '1' }
+			}
+		);
 	}
 
 	try {

@@ -21,5 +21,6 @@ export { default as Skeleton } from './Skeleton.svelte';
 export { default as Text } from './Text.svelte';
 export { default as Divider } from './Divider.svelte';
 export { default as Link } from './Link.svelte';
+export { default as AdminLink } from './AdminLink.svelte';
 export { default as Icon } from './Icon.svelte';
 export { default as EmptyState } from './EmptyState.svelte';
