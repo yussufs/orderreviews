@@ -1,8 +1,19 @@
 import type { RequestHandler } from './$types';
 import { authenticateWebhook } from '$lib/server/shopify/webhooks';
 import { db } from '$lib/server/db';
-import { session as sessionTable } from '$lib/shared/db/schema';
-import { eq } from 'drizzle-orm';
+import {
+	session as sessionTable,
+	reviewRequests,
+	feedbackSubmissions,
+	reviewCollectionSettings,
+	widgetSettings,
+	locations,
+	reviews,
+	shopPreferences,
+	jobStatus
+} from '$lib/shared/db/schema';
+import { eq, and } from 'drizzle-orm';
+import { cancelFollowups, cancelFeedbackEmail } from '$lib/server/queue/enqueue';
 
 /**
  * Compliance webhook payloads
@@ -30,6 +41,17 @@ interface ShopRedactPayload {
 
 type CompliancePayload = CustomerDataRequestPayload | CustomerRedactPayload | ShopRedactPayload;
 
+/** Cancel any queued send/follow-up jobs for the given review requests. */
+async function cancelJobsFor(
+	rows: { sendJobId: string | null; followupJobIds: string[] | null }[]
+) {
+	const followups = rows.flatMap((r) => r.followupJobIds ?? []);
+	if (followups.length) await cancelFollowups(followups);
+	for (const r of rows) {
+		if (r.sendJobId) await cancelFeedbackEmail(r.sendJobId);
+	}
+}
+
 export const POST: RequestHandler = async ({ request }) => {
 	const { shop, topic, payload } = await authenticateWebhook<CompliancePayload>(request);
 
@@ -37,28 +59,71 @@ export const POST: RequestHandler = async ({ request }) => {
 		switch (topic) {
 			case 'customers/data_request': {
 				const p = payload as CustomerDataRequestPayload;
-				console.log(`Customer data request #${p.data_request.id} for shop ${shop}`);
-				console.log(`Customer ID: ${p.customer.id}, Email: ${p.customer.email}`);
-				// TODO: Query your database for any data associated with this customer
-				// and provide it to the store owner (via email, admin panel, etc.)
-				// You have 30 days to comply with this request
+				const email = p.customer.email;
+				// Gather the PII we store for this customer so the merchant can fulfil the request.
+				const requests = await db
+					.select()
+					.from(reviewRequests)
+					.where(and(eq(reviewRequests.shop, shop), eq(reviewRequests.customerEmail, email)));
+				const feedback = await db
+					.select()
+					.from(feedbackSubmissions)
+					.where(
+						and(eq(feedbackSubmissions.shop, shop), eq(feedbackSubmissions.customerEmail, email))
+					);
+				console.log(
+					`[compliance] data_request #${p.data_request.id} for ${email}: ` +
+						`${requests.length} review request(s), ${feedback.length} feedback entr(ies)`
+				);
+				// 30 days to provide this data to the merchant (export / admin panel as you grow).
 				break;
 			}
 
 			case 'customers/redact': {
 				const p = payload as CustomerRedactPayload;
-				console.log(`Customer redact request for shop ${shop}`);
-				console.log(`Customer ID: ${p.customer.id}, Email: ${p.customer.email}`);
-				// TODO: Delete or anonymize any personal data for this customer
-				console.log(`Deleted customer data for customer ${p.customer.id}`);
+				const email = p.customer.email;
+
+				const requests = await db
+					.select()
+					.from(reviewRequests)
+					.where(and(eq(reviewRequests.shop, shop), eq(reviewRequests.customerEmail, email)));
+
+				await cancelJobsFor(requests);
+
+				// Deleting review requests cascades to their feedback submissions.
+				await db
+					.delete(reviewRequests)
+					.where(and(eq(reviewRequests.shop, shop), eq(reviewRequests.customerEmail, email)));
+				// Defensive: remove any feedback rows that referenced this email directly.
+				await db
+					.delete(feedbackSubmissions)
+					.where(
+						and(eq(feedbackSubmissions.shop, shop), eq(feedbackSubmissions.customerEmail, email))
+					);
+
+				console.log(`[compliance] redacted customer ${email} for ${shop}`);
 				break;
 			}
 
 			case 'shop/redact': {
-				console.log(`Shop redact request for ${shop} - deleting all shop data`);
+				// Cancel queued jobs, then delete all of this shop's data.
+				const requests = await db
+					.select()
+					.from(reviewRequests)
+					.where(eq(reviewRequests.shop, shop));
+				await cancelJobsFor(requests);
+
+				await db.delete(feedbackSubmissions).where(eq(feedbackSubmissions.shop, shop));
+				await db.delete(reviewRequests).where(eq(reviewRequests.shop, shop));
+				await db.delete(reviewCollectionSettings).where(eq(reviewCollectionSettings.shop, shop));
+				await db.delete(widgetSettings).where(eq(widgetSettings.shop, shop));
+				await db.delete(reviews).where(eq(reviews.shop, shop)); // also cascades when locations go
+				await db.delete(locations).where(eq(locations.shop, shop));
+				await db.delete(jobStatus).where(eq(jobStatus.shop, shop));
+				await db.delete(shopPreferences).where(eq(shopPreferences.shop, shop));
 				await db.delete(sessionTable).where(eq(sessionTable.shop, shop));
-				// TODO: Delete from additional tables as your app grows
-				console.log(`Successfully deleted all data for shop ${shop}`);
+
+				console.log(`[compliance] deleted all data for shop ${shop}`);
 				break;
 			}
 

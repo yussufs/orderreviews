@@ -14,3 +14,14 @@ package-lock.json
 
 # Shopify
 .shopify
+
+# Theme app extension (liquid/toml/built bundle have no prettier parser)
+extensions
+
+# Widget sub-project (its own toolchain + formatting)
+widget
+
+# Files with no prettier parser
+*.svg
+*.liquid
+*.toml

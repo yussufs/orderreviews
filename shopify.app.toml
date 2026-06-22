@@ -1,15 +1,17 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "a47fad88032c9fec521d884c91eb827b"
-name = "Svelte App"
-application_url = "https://example.com"
+client_id = "67a6df181b123ee57dcbe70d7e840b54"
+name = "Order Reviews & Google Ratings"
+handle = "order-reviews"
+application_url = "https://shopify.dev/apps/default-app-home"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
+include_config_on_deploy = true
 
 [webhooks]
-api_version = "2026-04"
+api_version = "2026-07"
 
   [[webhooks.subscriptions]]
   uri = "/webhooks/compliance"
@@ -23,10 +25,25 @@ api_version = "2026-04"
   topics = [ "app/uninstalled" ]
   uri = "/webhooks/app/uninstalled"
 
-[auth]
-redirect_urls = [ "https://example.com/auth/callback" ]
+  [[webhooks.subscriptions]]
+  topics = [ "orders/paid" ]
+  uri = "/webhooks/orders/paid"
+
+  [[webhooks.subscriptions]]
+  topics = [ "orders/fulfilled" ]
+  uri = "/webhooks/orders/fulfilled"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "write_products"
+scopes = "write_products,read_orders"
 use_legacy_install_flow = false
+
+[app_proxy]
+# Storefront fetches https://{shop}/apps/order-reviews/widget-settings, proxied to /proxy/*
+# `shopify app dev` rewrites `url` to the dev tunnel automatically.
+url = "https://shopify.dev/apps/default-app-home/proxy"
+subpath = "order-reviews"
+prefix = "apps"
+
+[auth]
+redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]

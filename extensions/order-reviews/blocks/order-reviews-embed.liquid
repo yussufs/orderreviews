@@ -1,0 +1,101 @@
+<script src="{{ 'widget.js' | asset_url }}" defer></script>
+<order-reviews-widget
+  widget-type="order-reviews-{{ block.settings.style }}"
+  display-color="{{ block.settings.color }}"
+  location="{{ block.settings.location }}"
+  myshopify-domain="{{ shop.permanent_domain }}"
+  style="display: block; width: 100%; max-width: 100%; box-sizing: border-box; margin: {{ block.settings.margin_top }}px auto {{ block.settings.margin_bottom }}px;">
+  <style>
+    :host {
+      max-width: {{ block.settings.max_width }}px;
+    }
+    {{ block.settings.custom_css }}
+  </style>
+</order-reviews-widget>
+{% schema %}
+{
+  "name": "Order Reviews (global)",
+  "target": "body",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Shows your Google reviews widget across the storefront. To place it on a specific section (e.g. a product page), use the 'Grid' or 'Carousel' app block instead."
+    },
+    {
+      "type": "select",
+      "id": "style",
+      "label": "Design",
+      "default": "grid",
+      "options": [
+        { "value": "grid", "label": "Grid" },
+        { "value": "carousel", "label": "Carousel" }
+      ]
+    },
+    {
+      "type": "select",
+      "id": "location",
+      "label": "Location",
+      "default": "1",
+      "options": [
+        { "value": "1", "label": "Location 1" },
+        { "value": "2", "label": "Location 2" },
+        { "value": "3", "label": "Location 3" },
+        { "value": "4", "label": "Location 4" },
+        { "value": "5", "label": "Location 5" }
+      ],
+      "info": "Locations are ordered by when they were added in the app."
+    },
+    {
+      "type": "select",
+      "id": "color",
+      "label": "Color",
+      "default": "default",
+      "options": [
+        { "value": "default", "label": "Default" },
+        { "value": "light-purple", "label": "Light Purple" },
+        { "value": "dark", "label": "Dark" },
+        { "value": "off-white", "label": "Off White" },
+        { "value": "pink", "label": "Pink" },
+        { "value": "blue", "label": "Blue" },
+        { "value": "green", "label": "Green" },
+        { "value": "yellow", "label": "Yellow" }
+      ]
+    },
+    {
+      "type": "range",
+      "id": "max_width",
+      "label": "Max width",
+      "min": 400,
+      "max": 1600,
+      "step": 50,
+      "default": 1200,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "label": "Top margin",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "label": "Bottom margin",
+      "min": 0,
+      "max": 100,
+      "step": 4,
+      "default": 24,
+      "unit": "px"
+    },
+    {
+      "type": "textarea",
+      "id": "custom_css",
+      "label": "Custom CSS"
+    }
+  ]
+}
+{% endschema %}

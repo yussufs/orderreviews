@@ -1,0 +1,401 @@
+/**
+ * Base styles for Google Reviews Widget
+ * These styles are injected into the Shadow DOM
+ */
+
+/* ============================================
+   CSS Custom Properties (Variables)
+   ============================================ */
+
+:host {
+	/* Primary variables - these cascade to all elements */
+	--dragonio-primary-bg-color: #f8f8f8;
+	--dragonio-primary-color: #333333;
+	--dragonio-primary-border-radius: 16px;
+	--dragonio-primary-padding: 1em;
+	--dragonio-primary-box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+	/* Star rating */
+	--dragonio-google-review-star-color: #fbbc04;
+
+	/* Review images */
+	--dragonio-google-review-image-width: 80px;
+	--dragonio-google-review-image-border-radius: 12px;
+
+	/* Widget container */
+	--dragonio-google-review-widget-background: var(--dragonio-primary-bg-color);
+	--dragonio-google-review-widget-padding: var(--dragonio-primary-padding);
+	--dragonio-google-review-widget-border-radius: var(--dragonio-primary-border-radius);
+	--dragonio-google-review-widget-box-shadow: none;
+
+	/* Header */
+	--dragonio-google-review-widget-header-background: transparent;
+	--dragonio-google-review-widget-header-color: var(--dragonio-primary-color);
+	--dragonio-google-review-widget-header-padding: 0;
+	--dragonio-google-review-widget-header-border-radius: 0;
+	--dragonio-google-review-widget-header-box-shadow: none;
+
+	/* Image sizes */
+	--dragonio-google-review-widget-header-image-size: 56px;
+	--dragonio-google-review-widget-image-size: 40px;
+
+	/* Buttons */
+	--dragonio-google-review-widget-button-background: #ffffff;
+	--dragonio-google-review-widget-button-color: var(--dragonio-primary-color);
+
+	/* Review cards */
+	--dragonio-google-review-widget-card-background: #ffffff;
+	--dragonio-google-review-widget-card-color: var(--dragonio-primary-color);
+	--dragonio-google-review-widget-card-padding: var(--dragonio-primary-padding);
+	--dragonio-google-review-widget-card-border-radius: var(--dragonio-primary-border-radius);
+	--dragonio-google-review-widget-card-box-shadow: var(--dragonio-primary-box-shadow);
+
+	/* Footer (speech bubble reviewer info) */
+	--dragonio-google-review-widget-footer-color: var(--dragonio-primary-color);
+
+	/* Grid columns (customizable per widget) */
+	--grid-cols-lg: 3;
+	--grid-cols-md: 2;
+	--grid-cols-sm: 1;
+
+	/* Masonry columns (customizable per widget) */
+	--masonry-cols-lg: 3;
+	--masonry-cols-md: 2;
+	--masonry-cols-sm: 1;
+}
+
+/* ============================================
+   Shadow Container (minimal mount target for Svelte)
+   ============================================ */
+
+.dragonio-widget-shadow-container {
+	display: contents;
+}
+
+/* ============================================
+   Host Element Reset
+   ============================================ */
+
+:host {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	min-width: 0;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	overflow: hidden;
+	font-family:
+		'Noto Sans',
+		-apple-system,
+		BlinkMacSystemFont,
+		'San Francisco',
+		'Segoe UI',
+		Roboto,
+		'Helvetica Neue',
+		sans-serif;
+	font-size: 14px;
+	line-height: 1.5;
+}
+
+/* ============================================
+   Global Resets
+   ============================================ */
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+p {
+	margin: 0;
+	padding: 0;
+}
+
+button,
+a {
+	font-family: inherit;
+	text-decoration: none;
+}
+
+button:hover,
+a:hover {
+	filter: brightness(0.9);
+}
+
+/* ============================================
+   Loading State
+   ============================================ */
+
+.dragonio-loading {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 20px;
+	text-align: center;
+}
+
+.dragonio-loading p {
+	margin: 16px 0 0;
+	color: #666;
+	font-size: 14px;
+	max-width: 300px;
+}
+
+.dragonio-spinner {
+	width: 40px;
+	height: 40px;
+	border: 4px solid rgba(0, 0, 0, 0.1);
+	border-top-color: #333;
+	border-radius: 50%;
+	animation: dragonio-spin 0.8s linear infinite;
+}
+
+@keyframes dragonio-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+/* ============================================
+   Verified Checkmark Icon
+   ============================================ */
+
+svg.verified-checkmark {
+	fill: rgb(81, 142, 248);
+	width: 1.3em;
+	height: 1.3em;
+}
+
+svg.verified-checkmark path:last-child {
+	fill: white;
+}
+
+/* ============================================
+   Stars Rating
+   ============================================ */
+
+.stars {
+	display: flex;
+}
+
+.star {
+	width: 1.2em;
+	height: 1.2em;
+}
+
+.star.filled {
+	fill: var(--dragonio-google-review-star-color);
+}
+
+.star.empty {
+	fill: #0000001a;
+}
+
+/* ============================================
+   Widget Container
+   ============================================ */
+
+.widget-container {
+	display: block;
+	width: 100%;
+	max-width: 100%;
+	background: var(--dragonio-google-review-widget-background);
+	padding: var(--dragonio-google-review-widget-padding);
+	border-radius: var(--dragonio-google-review-widget-border-radius);
+	box-shadow: var(--dragonio-google-review-widget-box-shadow);
+	box-sizing: border-box;
+}
+
+/* ============================================
+   Header
+   ============================================ */
+
+.header {
+	background: var(--dragonio-google-review-widget-header-background);
+	color: var(--dragonio-google-review-widget-header-color);
+	padding: var(--dragonio-google-review-widget-header-padding);
+	border-radius: var(--dragonio-google-review-widget-header-border-radius);
+	box-shadow: var(--dragonio-google-review-widget-header-box-shadow);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 1em;
+}
+
+@media (max-width: 600px) {
+	.header {
+		flex-direction: column;
+	}
+}
+
+.header img {
+	width: var(--dragonio-google-review-widget-header-image-size);
+	height: var(--dragonio-google-review-widget-header-image-size);
+	border-radius: 8px;
+	object-fit: cover;
+}
+
+.location-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25em;
+	flex: 1;
+}
+
+.title {
+	font-size: 1.25em;
+	font-weight: 500;
+	margin: 0;
+}
+
+.rating-block {
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.rating-value {
+	font-size: 1em;
+	font-weight: 600;
+}
+
+.leave-button {
+	background: var(--dragonio-google-review-widget-button-background);
+	color: var(--dragonio-google-review-widget-button-color);
+	padding: 0.65em 1em;
+	border-radius: 8px;
+	font-weight: 500;
+	border: none;
+	text-align: center;
+	cursor: pointer;
+	text-decoration: none;
+	white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+	.leave-button {
+		width: 100%;
+	}
+}
+
+/* ============================================
+   Review Card
+   ============================================ */
+
+.review-card {
+	background: var(--dragonio-google-review-widget-card-background);
+	color: var(--dragonio-google-review-widget-card-color);
+	padding: var(--dragonio-google-review-widget-card-padding);
+	border-radius: var(--dragonio-google-review-widget-card-border-radius);
+	box-shadow: var(--dragonio-google-review-widget-card-box-shadow);
+}
+
+.review-content-and-images {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	gap: 1em;
+}
+
+/* ============================================
+   Review Images
+   ============================================ */
+
+.review-images {
+	position: relative;
+	--review-image-width: var(--dragonio-google-review-image-width);
+	--review-image-overlap: calc(var(--dragonio-google-review-image-width) * 0.25);
+	width: calc(
+		var(--review-image-width) + (var(--review-image-count) - 1) * var(--review-image-overlap)
+	);
+	min-width: calc(
+		var(--review-image-width) + (var(--review-image-count) - 1) * var(--review-image-overlap)
+	);
+	height: calc(var(--review-image-width) * (5 / 4));
+}
+
+.review-image {
+	position: absolute;
+	top: 0;
+	left: calc(var(--review-image-index) * var(--review-image-overlap));
+	width: var(--review-image-width);
+	aspect-ratio: 4 / 5;
+	object-fit: cover;
+	border-radius: var(--dragonio-google-review-image-border-radius);
+	border: 2px solid white;
+	z-index: var(--review-image-index);
+}
+
+.review-image.hidden {
+	display: none;
+}
+
+.review-image-overlay {
+	cursor: pointer;
+	position: absolute;
+	top: 0;
+	left: calc((var(--review-image-count) - 1) * var(--review-image-overlap));
+	width: var(--review-image-width);
+	height: calc(var(--review-image-width) * (5 / 4));
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(0, 0, 0, 0.6);
+	color: #fff;
+	font-size: 1.5em;
+	font-weight: bold;
+	border-radius: var(--dragonio-google-review-image-border-radius);
+	border: 2px solid white;
+	z-index: calc(var(--review-image-count) + 1);
+}
+
+/* ============================================
+   Google Logo
+   ============================================ */
+
+.google-logo-container {
+	position: absolute;
+	top: 1em;
+	right: 1em;
+	font-size: 8px;
+	display: flex;
+	align-items: center;
+	gap: 0.5em;
+}
+
+.google-logo-container .hover-text {
+	opacity: 0;
+	transition: opacity 0.3s;
+}
+
+.google-logo-container .google-logo {
+	width: 20px;
+	height: auto;
+}
+
+.google-logo-container:hover .hover-text {
+	opacity: 1;
+}
+
+/* ============================================
+   Show More Button
+   ============================================ */
+
+.show-more-container {
+	margin-top: 0.5em;
+}
+
+.show-more {
+	font-size: 0.85em;
+	font-weight: 500;
+	filter: brightness(2);
+	text-decoration: underline;
+	cursor: pointer;
+	background: none;
+	border: none;
+	padding: 0;
+	align-self: start;
+}

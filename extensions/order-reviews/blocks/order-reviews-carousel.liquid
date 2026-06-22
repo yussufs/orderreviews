@@ -1,0 +1,213 @@
+<style>
+  .shopify-block.full-width-block {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+</style>
+<script src="{{ 'widget.js' | asset_url }}" defer></script>
+<order-reviews-widget
+  widget-type="order-reviews-carousel"
+  variant="primary"
+  display-color="{{ block.settings.color }}"
+  location="{{ block.settings.location }}"
+  myshopify-domain="{{ shop.permanent_domain }}"
+  {% if block.settings.fixed_height == false %}display-variableheighttext="true"{% endif %}
+  style="display: block; width: 100%; max-width: 100%; box-sizing: border-box;">
+  {% if block.settings.color == "custom" %}
+  <style>
+    :host {
+      --dragonio-primary-bg-color: {{ block.settings.primary_bg_color }};
+      --dragonio-primary-color: {{ block.settings.primary_font_color }};
+      --dragonio-primary-border-radius: {{ block.settings.primary_border_radius }}px;
+      --dragonio-primary-padding: {{ block.settings.primary_padding }}em;
+      --order-reviews-widget-button-background: {{ block.settings.button_bg_color }};
+      --order-reviews-widget-button-color: {{ block.settings.button_font_color }};
+      --order-reviews-widget-card-background: {{ block.settings.widget_card_bg_color }};
+      --order-reviews-widget-card-color: {{ block.settings.widget_card_font_color }};
+      --order-reviews-widget-card-border-radius: {{ block.settings.widget_card_border_radius }}px;
+      --order-reviews-widget-header-color: {{ block.settings.header_font_color }};
+      --dragonio-google-review-star-color: {{ block.settings.google_review_star_color }};
+      --dragonio-google-review-image-width: {{ block.settings.google_review_image_width }}px;
+    }
+    {{ block.settings.custom_css }}
+  </style>
+  {% elsif block.settings.custom_css != blank %}
+  <style>{{ block.settings.custom_css }}</style>
+  {% endif %}
+</order-reviews-widget>
+{% schema %}
+{
+  "name": "Carousel 1",
+  "target": "section",
+  "class": "full-width-block",
+  "settings": [
+    {
+      "type": "select",
+      "id": "location",
+      "label": "Location",
+      "default": "1",
+      "options": [
+        { "value": "1", "label": "Location 1" },
+        { "value": "2", "label": "Location 2" },
+        { "value": "3", "label": "Location 3" },
+        { "value": "4", "label": "Location 4" },
+        { "value": "5", "label": "Location 5" }
+      ],
+      "info": "Select which Google Business location to display. Locations are ordered by when they were added in the app."
+    },
+    {
+      "type": "select",
+      "id": "color",
+      "label": "Color",
+      "options": [
+        { "value": "default", "label": "Default" },
+        { "value": "light-purple", "label": "Light Purple" },
+        { "value": "dark", "label": "Dark" },
+        { "value": "off-white", "label": "Off White" },
+        { "value": "pink", "label": "Pink" },
+        { "value": "blue", "label": "Blue" },
+        { "value": "green", "label": "Green" },
+        { "value": "yellow", "label": "Yellow" },
+        { "value": "custom", "label": "Custom" }
+      ]
+    },
+    {
+      "type": "checkbox",
+      "id": "fixed_height",
+      "label": "Fixed Height",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Widget Settings",
+      "visible_if": "{{ block.settings.color == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "primary_bg_color",
+      "label": "Background Color",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#f8f8f8"
+    },
+    {
+      "type": "color",
+      "id": "primary_font_color",
+      "label": "Text Color",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#333333"
+    },
+    {
+      "type": "range",
+      "id": "primary_border_radius",
+      "label": "Border Radius",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "range",
+      "id": "primary_padding",
+      "label": "Padding",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "min": 0,
+      "max": 3,
+      "step": 0.2,
+      "default": 1,
+      "unit": "em"
+    },
+    {
+      "type": "header",
+      "content": "Header Settings",
+      "visible_if": "{{ block.settings.color == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "header_font_color",
+      "label": "Header Text Color",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#333333"
+    },
+    {
+      "type": "header",
+      "content": "Card Settings",
+      "visible_if": "{{ block.settings.color == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "widget_card_bg_color",
+      "label": "Card Background",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "widget_card_font_color",
+      "label": "Card Text Color",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#333333"
+    },
+    {
+      "type": "range",
+      "id": "widget_card_border_radius",
+      "label": "Card Border Radius",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "min": 0,
+      "max": 50,
+      "step": 1,
+      "default": 16,
+      "unit": "px"
+    },
+    {
+      "type": "header",
+      "content": "Button Settings",
+      "visible_if": "{{ block.settings.color == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "button_bg_color",
+      "label": "Button Background",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "button_font_color",
+      "label": "Button Text Color",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#333333"
+    },
+    {
+      "type": "header",
+      "content": "Review Settings",
+      "visible_if": "{{ block.settings.color == 'custom' }}"
+    },
+    {
+      "type": "color",
+      "id": "google_review_star_color",
+      "label": "Star Color",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "default": "#fbbc04"
+    },
+    {
+      "type": "range",
+      "id": "google_review_image_width",
+      "label": "Review Image Width",
+      "visible_if": "{{ block.settings.color == 'custom' }}",
+      "min": 40,
+      "max": 120,
+      "step": 10,
+      "default": 80,
+      "unit": "px"
+    },
+    {
+      "type": "textarea",
+      "id": "custom_css",
+      "label": "Custom CSS",
+      "info": "Add custom CSS to override default styles. [Learn more](https://dragonapps.io/blog/how-to-customize-the-google-review-widget/)."
+    }
+  ]
+}
+{% endschema %}

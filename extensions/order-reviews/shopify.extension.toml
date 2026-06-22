@@ -1,0 +1,7 @@
+api_version = "2024-10"
+
+[[extensions]]
+uid = "17156528-9bf2-4e1d-bec1-1caa9232608b"
+type = "theme"
+name = "Order Reviews Widget"
+handle = "order-reviews"

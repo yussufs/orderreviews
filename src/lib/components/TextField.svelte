@@ -85,7 +85,7 @@
 				{readonly}
 				{rows}
 				maxlength={maxLength}
-				autocomplete={autoComplete}
+				autocomplete={autoComplete as import('svelte/elements').FullAutoFill}
 				aria-invalid={error ? 'true' : undefined}
 				aria-describedby={error ? `${inputId}-error` : helpText ? `${inputId}-help` : undefined}
 				class="input"
@@ -104,7 +104,7 @@
 				{disabled}
 				{readonly}
 				maxlength={maxLength}
-				autocomplete={autoComplete}
+				autocomplete={autoComplete as import('svelte/elements').FullAutoFill}
 				aria-invalid={error ? 'true' : undefined}
 				aria-describedby={error ? `${inputId}-error` : helpText ? `${inputId}-help` : undefined}
 				class="input"

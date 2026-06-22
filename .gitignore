@@ -61,3 +61,7 @@ yarn.lock
 
 # Reference files (not part of the template)
 reference/
+
+# Widget build output (bundle is copied into the extension at build time)
+widget/public/
+extensions/*/assets/widget.js
