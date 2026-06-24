@@ -312,6 +312,11 @@ export const reviewRequests = pgTable(
 		customerEmail: text('customer_email').notNull(),
 		customerName: text('customer_name'),
 
+		// App public base URL captured when the order came in (the live tunnel in
+		// dev). The worker builds feedback links from this so no APP_URL is needed
+		// in dev; APP_URL env overrides it when set (production).
+		appBaseUrl: text('app_base_url'),
+
 		status: text('status').$type<ReviewRequestStatus>().default('scheduled').notNull(),
 
 		// Rating the customer gave once they respond (1-5)

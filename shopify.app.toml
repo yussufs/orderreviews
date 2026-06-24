@@ -2,7 +2,7 @@
 
 client_id = "67a6df181b123ee57dcbe70d7e840b54"
 name = "Order Reviews & Google Ratings"
-handle = "order-reviews"
+handle = "order-reviews-google-ratings"
 application_url = "https://shopify.dev/apps/default-app-home"
 embedded = true
 
@@ -40,8 +40,9 @@ use_legacy_install_flow = false
 
 [app_proxy]
 # Storefront fetches https://{shop}/apps/order-reviews/widget-settings, proxied to /proxy/*
-# `shopify app dev` rewrites `url` to the dev tunnel automatically.
-url = "https://shopify.dev/apps/default-app-home/proxy"
+# `shopify app dev` rewrites the URL's HOST to the dev tunnel but keeps the PATH,
+# so the path here must be exactly /proxy (-> our route /proxy/widget-settings).
+url = "https://shopify.dev/proxy"
 subpath = "order-reviews"
 prefix = "apps"
 

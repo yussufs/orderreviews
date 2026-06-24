@@ -18,6 +18,16 @@ function getAppUrl(): string {
 	return appUrl;
 }
 
+/**
+ * Resolve the app's public base URL without throwing. Prefers an explicit
+ * APP_URL override, then the CLI-injected SHOPIFY_APP_URL / HOST (set during
+ * `shopify app dev`). Used to capture the current tunnel URL on each order so
+ * the worker can build feedback-email links without a hand-set APP_URL in dev.
+ */
+export function resolveAppBaseUrl(): string | null {
+	return env.APP_URL || env.SHOPIFY_APP_URL || env.HOST || null;
+}
+
 let sessionStorageInstance: DrizzleSessionStorage | null = null;
 
 function createShopifyApi(): Shopify {

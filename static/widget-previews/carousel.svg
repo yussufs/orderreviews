@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 360" role="img" aria-label="Carousel widget preview">
+  <rect width="600" height="360" fill="#f4f5f7"/>
+  <g fill="#ffffff" stroke="#e1e3e5">
+    <rect x="80" y="80" width="200" height="200" rx="12"/>
+    <rect x="300" y="80" width="200" height="200" rx="12"/>
+    <rect x="520" y="80" width="120" height="200" rx="12"/>
+    <rect x="-40" y="80" width="120" height="200" rx="12"/>
+  </g>
+  <g fill="#fbbc04" font-family="sans-serif" font-size="20">
+    <text x="100" y="118">★★★★★</text>
+    <text x="320" y="118">★★★★★</text>
+  </g>
+  <g fill="#c9cccf">
+    <rect x="100" y="138" width="160" height="9" rx="4.5"/>
+    <rect x="100" y="158" width="140" height="9" rx="4.5"/>
+    <rect x="100" y="178" width="150" height="9" rx="4.5"/>
+    <rect x="100" y="232" width="100" height="9" rx="4.5"/>
+    <rect x="320" y="138" width="160" height="9" rx="4.5"/>
+    <rect x="320" y="158" width="130" height="9" rx="4.5"/>
+    <rect x="320" y="178" width="150" height="9" rx="4.5"/>
+    <rect x="320" y="232" width="100" height="9" rx="4.5"/>
+  </g>
+  <g fill="#ffffff" stroke="#c9cccf">
+    <circle cx="40" cy="180" r="22"/>
+    <circle cx="560" cy="180" r="22"/>
+  </g>
+  <g fill="none" stroke="#6d7175" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M45 170 l-8 10 l8 10"/>
+    <path d="M555 170 l8 10 l-8 10"/>
+  </g>
+  <g fill="#c9cccf">
+    <circle cx="285" cy="320" r="5"/>
+    <circle cx="305" cy="320" r="5" fill="#6d7175"/>
+    <circle cx="325" cy="320" r="5"/>
+  </g>
+</svg>

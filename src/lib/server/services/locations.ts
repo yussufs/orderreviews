@@ -126,3 +126,23 @@ export async function getReviewsForLocation(shop: string, placeId: string) {
 		.where(and(eq(reviews.placeId, placeId), eq(reviews.shop, shop)))
 		.orderBy(desc(reviews.publishedAtDate));
 }
+
+/** All reviews for a shop (across locations), with the location title, for the reviews table. */
+export async function getAllReviewsForShop(shop: string) {
+	return db
+		.select({
+			reviewId: reviews.reviewId,
+			placeId: reviews.placeId,
+			text: reviews.text,
+			name: reviews.name,
+			stars: reviews.stars,
+			publishedAtDate: reviews.publishedAtDate,
+			reviewerPhotoUrl: reviews.reviewerPhotoUrl,
+			hidden: reviews.hidden,
+			locationTitle: locations.title
+		})
+		.from(reviews)
+		.leftJoin(locations, eq(reviews.placeId, locations.placeId))
+		.where(eq(reviews.shop, shop))
+		.orderBy(desc(reviews.publishedAtDate));
+}

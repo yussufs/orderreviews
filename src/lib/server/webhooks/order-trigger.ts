@@ -12,6 +12,7 @@ import {
 	setSendJob
 } from '$lib/server/services/review-collection';
 import { enqueueFeedbackEmail } from '$lib/server/queue/enqueue';
+import { resolveAppBaseUrl } from '$lib/server/shopify';
 
 /** Minimal shape of the Shopify Order webhook payload we rely on. */
 interface OrderPayload {
@@ -57,7 +58,10 @@ export async function handleOrderTrigger(
 		orderId,
 		customerEmail,
 		customerName: customerName || null,
-		scheduledFor
+		scheduledFor,
+		// Capture the live app URL (CLI-injected tunnel in dev) so the worker can
+		// build feedback links without a hand-set APP_URL.
+		appBaseUrl: resolveAppBaseUrl()
 	});
 
 	// Only enqueue on first creation (idempotency for duplicate/both-topic deliveries).

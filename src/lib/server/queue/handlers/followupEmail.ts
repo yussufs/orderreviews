@@ -33,7 +33,7 @@ export async function handleFollowupEmail(data: FollowupEmailPayload): Promise<v
 	if ((req.followupsSent ?? 0) >= settings.maxFollowups) return;
 
 	const storeName = prettyStoreName(data.shop, settings.fromName);
-	const ratingLinks = buildRatingLinks(req.id, settings.ratingType);
+	const ratingLinks = buildRatingLinks(req.id, settings.ratingType, req.appBaseUrl);
 	const { subject, html } = feedbackRequestEmail({
 		storeName,
 		customerName: req.customerName,

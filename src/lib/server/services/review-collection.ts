@@ -89,6 +89,7 @@ export async function createReviewRequest(params: {
 	customerEmail: string;
 	customerName?: string | null;
 	scheduledFor: Date;
+	appBaseUrl?: string | null;
 }): Promise<{ row: ReviewRequestRow; created: boolean }> {
 	const now = new Date();
 	const inserted = await db
@@ -98,6 +99,7 @@ export async function createReviewRequest(params: {
 			orderId: params.orderId,
 			customerEmail: params.customerEmail,
 			customerName: params.customerName ?? null,
+			appBaseUrl: params.appBaseUrl ?? null,
 			status: 'scheduled',
 			scheduledFor: params.scheduledFor,
 			createdAt: now,

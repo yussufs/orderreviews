@@ -1,18 +1,21 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { authApi } from '$lib/server/api-auth';
-import { getReviewsForLocation } from '$lib/server/services/locations';
+import { getReviewsForLocation, getAllReviewsForShop } from '$lib/server/services/locations';
 import { updateReviewVisibility } from '$lib/server/services/reviews';
 
-/** GET /app/api/reviews?placeId=... — reviews for a location (merchant mgmt). */
+/**
+ * GET /app/api/reviews — all reviews for the shop (for the reviews table).
+ * Pass ?placeId=... to scope to a single location.
+ */
 export const GET: RequestHandler = async ({ request, url }) => {
 	const auth = await authApi(request);
 	if (auth instanceof Response) return auth;
 
 	const placeId = url.searchParams.get('placeId');
-	if (!placeId) return json({ error: 'placeId is required' }, { status: 400 });
-
-	const reviews = await getReviewsForLocation(auth.session.shop, placeId);
+	const reviews = placeId
+		? await getReviewsForLocation(auth.session.shop, placeId)
+		: await getAllReviewsForShop(auth.session.shop);
 	return json({ reviews });
 };
 

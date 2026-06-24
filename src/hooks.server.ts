@@ -1,6 +1,17 @@
 import type { Handle } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 import { authenticateRequest, getShopFromRequest, AuthError } from '$lib/server/shopify/auth';
 import { shopify } from '$lib/server/shopify';
+
+// Bridge SvelteKit's private env into process.env once at server startup, so the
+// framework-agnostic server modules shared with the worker (pg-boss queue, AWS
+// SES, feedback-token signing) — which read process.env — also work inside the
+// web process. In dev, Vite loads .env into $env but NOT process.env.
+for (const [key, value] of Object.entries(env)) {
+	if (value !== undefined && process.env[key] === undefined) {
+		process.env[key] = value;
+	}
+}
 
 const RETRY_HEADER = 'X-Shopify-Retry-Invalid-Session-Request';
 

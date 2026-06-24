@@ -12,6 +12,7 @@ export { default as Switch } from './Switch.svelte';
 
 // Data display
 export { default as DataTable } from './DataTable.svelte';
+export { default as DataTableView } from './DataTableView.svelte';
 export { default as Badge } from './Badge.svelte';
 export { default as Banner } from './Banner.svelte';
 export { default as Spinner } from './Spinner.svelte';

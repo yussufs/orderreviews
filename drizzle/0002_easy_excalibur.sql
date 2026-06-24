@@ -1,0 +1,1 @@
+ALTER TABLE "review_requests" ADD COLUMN "app_base_url" text;

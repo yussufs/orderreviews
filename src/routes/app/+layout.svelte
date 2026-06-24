@@ -36,6 +36,7 @@
 
 <s-app-nav>
 	<s-link href="/app" rel="home">Home</s-link>
+	<s-link href="/app/reviews">Reviews</s-link>
 	<s-link href="/app/locations">Locations</s-link>
 	<s-link href="/app/widget">Widget</s-link>
 	<s-link href="/app/review-collection">Review collection</s-link>

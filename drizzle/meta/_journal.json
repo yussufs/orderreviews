@@ -15,6 +15,13 @@
 			"when": 1781830996406,
 			"tag": "0001_bumpy_skullbuster",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1782167023831,
+			"tag": "0002_easy_excalibur",
+			"breakpoints": true
 		}
 	]
 }
