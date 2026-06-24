@@ -4,6 +4,7 @@
 	import SearchField from './SearchField.svelte';
 	import Spinner from './Spinner.svelte';
 	import EmptyState from './EmptyState.svelte';
+	import Button from './Button.svelte';
 
 	interface Column {
 		label: string;
@@ -28,6 +29,8 @@
 		actions?: Snippet;
 		emptyHeading?: string;
 		emptyDescription?: string;
+		/** Rows per page; 0 (default) shows all rows with no pagination. */
+		pageSize?: number;
 	}
 
 	let {
@@ -43,10 +46,25 @@
 		filters,
 		actions,
 		emptyHeading = 'Nothing here yet',
-		emptyDescription = ''
+		emptyDescription = '',
+		pageSize = 0
 	}: Props = $props();
 
 	const hasToolbar = $derived(searchable || !!filters || !!actions);
+
+	// Client-side pagination (only when pageSize > 0).
+	let page = $state(1);
+	const pageCount = $derived(pageSize > 0 ? Math.max(1, Math.ceil(rows.length / pageSize)) : 1);
+	// Reset to a valid page when the row set changes (e.g. filtering).
+	$effect(() => {
+		if (page > pageCount) page = 1;
+	});
+	const pageRows = $derived(
+		pageSize > 0 ? rows.slice((page - 1) * pageSize, page * pageSize) : rows
+	);
+	const rangeStart = $derived(rows.length === 0 ? 0 : (page - 1) * pageSize + 1);
+	const rangeEnd = $derived(Math.min(page * pageSize, rows.length));
+	const showPagination = $derived(pageSize > 0 && rows.length > pageSize);
 </script>
 
 <div class="dtv">
@@ -87,11 +105,30 @@
 				</tr>
 			</thead>
 			<tbody>
-				{#each rows as item (rowKey(item))}
+				{#each pageRows as item (rowKey(item))}
 					<tr>{@render row(item)}</tr>
 				{/each}
 			</tbody>
 		</DataTable>
+
+		{#if showPagination}
+			<div class="dtv-pagination">
+				<span class="dtv-range">{rangeStart}–{rangeEnd} of {rows.length}</span>
+				<div class="dtv-pager">
+					<Button size="slim" variant="secondary" disabled={page <= 1} onclick={() => (page -= 1)}>
+						Previous
+					</Button>
+					<Button
+						size="slim"
+						variant="secondary"
+						disabled={page >= pageCount}
+						onclick={() => (page += 1)}
+					>
+						Next
+					</Button>
+				</div>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -134,5 +171,21 @@
 	}
 	.dtv-empty {
 		padding: var(--space-500);
+	}
+	.dtv-pagination {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-300);
+		padding: var(--space-300) var(--space-400);
+		border-top: 1px solid var(--color-border);
+	}
+	.dtv-range {
+		font-size: var(--font-size-sm);
+		color: var(--color-text-secondary);
+	}
+	.dtv-pager {
+		display: flex;
+		gap: var(--space-200);
 	}
 </style>

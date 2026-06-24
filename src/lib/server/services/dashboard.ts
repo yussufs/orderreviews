@@ -48,6 +48,13 @@ export interface DashboardData {
 		count: number;
 		recent: { id: string; rating: number; message: string | null; createdAt: string }[];
 	};
+	recentReviews: {
+		id: string;
+		name: string | null;
+		stars: number | null;
+		text: string | null;
+		date: string | null;
+	}[];
 }
 
 export async function getDashboard(shop: string, range: DashboardRange): Promise<DashboardData> {
@@ -129,6 +136,20 @@ export async function getDashboard(shop: string, range: DashboardRange): Promise
 		.orderBy(desc(feedbackSubmissions.createdAt))
 		.limit(3);
 
+	// --- Recent reviews (most recent imported, cumulative) ---
+	const recentReviews = await db
+		.select({
+			id: reviews.reviewId,
+			name: reviews.name,
+			stars: reviews.stars,
+			text: reviews.text,
+			date: reviews.publishedAtDate
+		})
+		.from(reviews)
+		.where(eq(reviews.shop, shop))
+		.orderBy(desc(reviews.publishedAtDate))
+		.limit(5);
+
 	return {
 		range,
 		setup: {
@@ -161,6 +182,13 @@ export async function getDashboard(shop: string, range: DashboardRange): Promise
 				message: f.message,
 				createdAt: f.createdAt.toISOString()
 			}))
-		}
+		},
+		recentReviews: recentReviews.map((r) => ({
+			id: r.id,
+			name: r.name,
+			stars: r.stars,
+			text: r.text,
+			date: r.date ? r.date.toISOString() : null
+		}))
 	};
 }

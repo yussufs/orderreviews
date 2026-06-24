@@ -1,8 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { Page, Card, Button, Banner, Badge, Text, Spinner } from '$lib/components';
+	import {
+		Page,
+		Card,
+		Button,
+		Banner,
+		Badge,
+		Text,
+		Spinner,
+		CollectReviewsCard
+	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
+	import { SMART_ACTIONS } from '$lib/smart-actions';
 
 	const ONBOARDING_SKIP_KEY = 'or_onboarding_skipped';
 
@@ -30,6 +40,13 @@
 			count: number;
 			recent: { id: string; rating: number; message: string | null; createdAt: string }[];
 		};
+		recentReviews: {
+			id: string;
+			name: string | null;
+			stars: number | null;
+			text: string | null;
+			date: string | null;
+		}[];
 	}
 
 	const COLLAPSE_KEY = 'or_setup_collapsed';
@@ -106,6 +123,9 @@
 		if (!iso) return 'never';
 		return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 	}
+	function stars(n: number | null): string {
+		return '★'.repeat(Math.max(0, Math.round(n ?? 0)));
+	}
 
 	const maxDist = $derived(data ? Math.max(1, ...data.ratingDistribution.map((d) => d.count)) : 1);
 	const hasCollectionData = $derived(!!data && data.collection.sent > 0);
@@ -127,7 +147,10 @@
 		{#if allDone && setupCollapsed}
 			<Card>
 				<div class="setup-collapsed">
-					<Text variant="bodyMd">✅ You're all set up</Text>
+					<span class="setup-done">
+						<span class="step-icon done">✓</span>
+						<Text variant="bodyMd">You're all set up</Text>
+					</span>
 					<Button variant="plain" onclick={toggleCollapse}>Show steps</Button>
 				</div>
 			</Card>
@@ -217,6 +240,8 @@
 			</Card>
 		</div>
 
+		<CollectReviewsCard title="Smart actions" items={SMART_ACTIONS} columns={2} />
+
 		<!-- Collection funnel -->
 		{#if hasCollectionData}
 			<Card title="Collection funnel">
@@ -287,7 +312,28 @@
 			</Card>
 		{/if}
 
-		<!-- Needs attention -->
+		<!-- Recent reviews -->
+		{#if data.recentReviews.length > 0}
+			<Card title="Recent reviews">
+				{#snippet actions()}
+					<Button variant="plain" href="/app/reviews">View all</Button>
+				{/snippet}
+				<ul class="rev-list">
+					{#each data.recentReviews as r (r.id)}
+						<li>
+							<span class="rev-stars">{stars(r.stars)}</span>
+							<span class="rev-body">
+								<span class="rev-name">{r.name ?? 'Anonymous'}</span>
+								<span class="rev-text">{r.text || '—'}</span>
+							</span>
+							<span class="rev-date">{formatDate(r.date)}</span>
+						</li>
+					{/each}
+				</ul>
+			</Card>
+		{/if}
+
+		<!-- Recent private feedback -->
 		{#if data.feedback.count > 0}
 			<Card title="Private feedback">
 				{#snippet actions()}
@@ -323,6 +369,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+	}
+	.setup-done {
+		display: flex;
+		align-items: center;
+		gap: var(--space-200);
 	}
 	.steps {
 		list-style: none;
@@ -472,6 +523,45 @@
 		color: var(--color-text-subdued, #4b5563);
 	}
 	.fb-date {
+		flex-shrink: 0;
+		font-size: 0.8rem;
+		color: var(--color-text-subdued, #6b7280);
+	}
+	.rev-list {
+		list-style: none;
+		margin: var(--space-300) 0 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-300);
+	}
+	.rev-list li {
+		display: flex;
+		align-items: center;
+		gap: var(--space-300);
+	}
+	.rev-stars {
+		flex-shrink: 0;
+		color: #fbbc04;
+		white-space: nowrap;
+	}
+	.rev-body {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+	.rev-name {
+		font-weight: var(--font-weight-medium);
+	}
+	.rev-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		color: var(--color-text-subdued, #4b5563);
+		font-size: 0.875rem;
+	}
+	.rev-date {
 		flex-shrink: 0;
 		font-size: 0.8rem;
 		color: var(--color-text-subdued, #6b7280);

@@ -1,9 +1,20 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { PageData } from './$types';
-	import { Page, Card, Button, Banner, Text, Spinner, Divider, AdminLink } from '$lib/components';
+	import {
+		Page,
+		Card,
+		Button,
+		Banner,
+		Text,
+		Spinner,
+		Divider,
+		AdminLink,
+		CollectReviewsCard
+	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
 	import { addAppBlockUrl, activateAppEmbedUrl, openAdminLink } from '$lib/admin-links';
+	import { SMART_ACTIONS } from '$lib/smart-actions';
 
 	let { data }: { data: PageData } = $props();
 
@@ -109,6 +120,10 @@
 </svelte:head>
 
 <Page title="Review widget">
+	{#snippet secondaryActions()}
+		<Button variant="secondary" href="/app/reviews">Hide / unhide reviews</Button>
+	{/snippet}
+
 	{#if error}
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}
@@ -182,6 +197,8 @@
 				your whole storefront.
 			</Text>
 		</Card>
+
+		<CollectReviewsCard title="Smart actions" items={SMART_ACTIONS} columns={2} />
 	{/if}
 </Page>
 

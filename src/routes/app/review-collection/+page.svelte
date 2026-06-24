@@ -99,7 +99,14 @@
 	<title>Review collection</title>
 </svelte:head>
 
-<Page title="Review collection">
+<Page
+	title="Review collection"
+	breadcrumbs={[
+		{ label: 'Reviews', href: '/app/reviews' },
+		{ label: 'Get more reviews', href: '/app/get-reviews' },
+		{ label: 'Email requests' }
+	]}
+>
 	{#if error}
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}

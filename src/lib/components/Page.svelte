@@ -1,10 +1,16 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 
+	interface Crumb {
+		label: string;
+		href?: string;
+	}
+
 	interface Props {
 		title?: string;
 		subtitle?: string;
 		narrow?: boolean;
+		breadcrumbs?: Crumb[];
 		backAction?: { url: string; label?: string };
 		primaryAction?: Snippet;
 		secondaryActions?: Snippet;
@@ -16,6 +22,7 @@
 		title,
 		subtitle,
 		narrow = false,
+		breadcrumbs,
 		backAction,
 		primaryAction,
 		secondaryActions,
@@ -25,9 +32,23 @@
 </script>
 
 <div class="page" class:narrow>
-	{#if title || backAction || primaryAction || secondaryActions}
+	{#if title || backAction || primaryAction || secondaryActions || (breadcrumbs && breadcrumbs.length)}
 		<div class="page-header">
 			<div class="page-header-content">
+				{#if breadcrumbs && breadcrumbs.length}
+					<nav class="breadcrumbs" aria-label="Breadcrumb">
+						{#each breadcrumbs as crumb, i (crumb.label)}
+							{#if crumb.href && i < breadcrumbs.length - 1}
+								<a href={crumb.href}>{crumb.label}</a>
+							{:else}
+								<span aria-current="page">{crumb.label}</span>
+							{/if}
+							{#if i < breadcrumbs.length - 1}
+								<span class="breadcrumb-sep" aria-hidden="true">/</span>
+							{/if}
+						{/each}
+					</nav>
+				{/if}
 				{#if backAction}
 					<a href={backAction.url} class="back-action">
 						<svg viewBox="0 0 20 20" fill="currentColor" width="20" height="20">
@@ -104,6 +125,35 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-200);
+	}
+
+	.breadcrumbs {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: var(--space-100);
+		font-size: var(--font-size-sm);
+		margin-bottom: var(--space-100);
+	}
+
+	.breadcrumbs a {
+		color: var(--color-text-secondary);
+		text-decoration: none;
+		transition: color var(--duration-fast) var(--ease-default);
+	}
+
+	.breadcrumbs a:hover {
+		color: var(--color-text);
+		text-decoration: underline;
+	}
+
+	.breadcrumbs span[aria-current='page'] {
+		color: var(--color-text);
+		font-weight: var(--font-weight-medium);
+	}
+
+	.breadcrumb-sep {
+		color: var(--color-text-secondary);
 	}
 
 	.back-action {

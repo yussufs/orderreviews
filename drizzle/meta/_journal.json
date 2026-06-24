@@ -22,6 +22,20 @@
 			"when": 1782167023831,
 			"tag": "0002_easy_excalibur",
 			"breakpoints": true
+		},
+		{
+			"idx": 3,
+			"version": "7",
+			"when": 1782339593135,
+			"tag": "0003_light_pride",
+			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "7",
+			"when": 1782341797399,
+			"tag": "0004_medical_thena",
+			"breakpoints": true
 		}
 	]
 }

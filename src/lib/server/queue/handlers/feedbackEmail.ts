@@ -30,7 +30,7 @@ export async function handleFeedbackEmail(data: FeedbackEmailPayload): Promise<v
 	if (!settings || !settings.enabled) return;
 
 	const storeName = prettyStoreName(data.shop, settings.fromName);
-	const ratingLinks = buildRatingLinks(req.id, settings.ratingType, req.appBaseUrl);
+	const ratingLinks = buildRatingLinks(req.id, settings.ratingType, data.shop);
 	const { subject, html } = feedbackRequestEmail({
 		storeName,
 		customerName: req.customerName,

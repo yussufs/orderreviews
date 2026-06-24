@@ -1,8 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import QRCode from 'qrcode';
+	import type { PageData } from './$types';
 	import { Page, Card, Button, Banner, Badge, Text, Spinner, Icon } from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
+
+	let { data }: { data: PageData } = $props();
 
 	interface Location {
 		placeId: string;
@@ -34,10 +37,9 @@
 		}
 	});
 
-	const placeId = $derived(settings?.placeId || locations[0]?.placeId || '');
-	const reviewLink = $derived(
-		placeId ? `https://search.google.com/local/writereview?placeid=${placeId}` : ''
-	);
+	// Link to OUR hosted rating form (stars/thumbs → Google or private feedback).
+	const reviewLink = $derived(data.shareUrl ?? '');
+	const hasLocation = $derived(locations.length > 0);
 
 	// Regenerate the QR whenever the review link changes (client-only).
 	$effect(() => {
@@ -68,7 +70,10 @@
 	<title>Get more reviews</title>
 </svelte:head>
 
-<Page title="Get more reviews" backAction={{ url: '/app/reviews', label: 'Reviews' }}>
+<Page
+	title="Get more reviews"
+	breadcrumbs={[{ label: 'Reviews', href: '/app/reviews' }, { label: 'Get more reviews' }]}
+>
 	{#if error}
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}
@@ -99,8 +104,8 @@
 			<Card title="Share a review link">
 				{#if reviewLink}
 					<Text tone="subdued">
-						Send this link in messages, emails, receipts or social posts. It opens your Google
-						review form directly.
+						Send this link in messages, emails, receipts or social posts. It opens your rating form
+						— happy customers are sent to Google, unhappy ones reach you privately.
 					</Text>
 					<div class="link-row">
 						<input class="link-input" type="text" readonly value={reviewLink} />
@@ -109,11 +114,15 @@
 							Copy
 						</Button>
 					</div>
+					{#if !hasLocation}
+						<Text tone="subdued" variant="bodySm">
+							Tip: connect a Google business so 5-star raters can post to Google.
+						</Text>
+					{/if}
 				{:else}
-					<Text tone="subdued">Connect a Google business first to get your review link.</Text>
-					<div class="row">
-						<Button variant="primary" href="/app/locations">Go to Locations</Button>
-					</div>
+					<Text tone="subdued">
+						Your share link isn't available yet — finish setting up the app, then reload.
+					</Text>
 				{/if}
 			</Card>
 		</section>
@@ -123,8 +132,7 @@
 			<Card title="QR code">
 				{#if reviewLink}
 					<Text tone="subdued">
-						Print it on packaging, receipts or in-store signage. Scanning opens your Google review
-						form.
+						Print it on packaging, receipts or in-store signage. Scanning opens your rating form.
 					</Text>
 					{#if qrDataUrl}
 						<div class="qr-box">
@@ -140,7 +148,9 @@
 						<div class="centered"><Spinner /></div>
 					{/if}
 				{:else}
-					<Text tone="subdued">Connect a Google business first to generate a QR code.</Text>
+					<Text tone="subdued">
+						Your share link isn't available yet — finish setting up the app, then reload.
+					</Text>
 				{/if}
 			</Card>
 		</section>

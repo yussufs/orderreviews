@@ -79,7 +79,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 };
 
 function isPublicRoute(pathname: string): boolean {
-	const publicRoutes = ['/webhooks', '/proxy', '/r', '/'];
+	const publicRoutes = ['/webhooks', '/proxy', '/'];
 
 	return publicRoutes.some(
 		(route) => pathname === route || (route !== '/' && pathname.startsWith(route + '/'))

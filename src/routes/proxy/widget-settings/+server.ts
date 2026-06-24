@@ -24,7 +24,9 @@ function placeData(location: typeof locations.$inferSelect | null) {
 		reviewsCount: location.reviewsCount,
 		imageUrl: location.imageUrl,
 		google_page_url: `https://www.google.com/maps/place/?q=place_id:${location.placeId}`,
-		review_link: `https://search.google.com/local/writereview?placeid=${location.placeId}`
+		// "Leave a Review" opens our hosted rating form (stars/thumbs → Google or
+		// private feedback) on the storefront via the App Proxy, not Google directly.
+		review_link: `/apps/order-reviews/review`
 	};
 }
 

@@ -2,16 +2,16 @@
 	import { onMount } from 'svelte';
 	import {
 		Page,
-		Card,
 		Button,
 		Banner,
 		Badge,
 		Text,
 		Select,
-		Icon,
-		DataTableView
+		DataTableView,
+		CollectReviewsCard
 	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
+	import { SMART_ACTIONS } from '$lib/smart-actions';
 
 	interface ReviewRow {
 		reviewId: string;
@@ -108,27 +108,6 @@
 		...locations.map((l) => ({ value: l.placeId, label: l.title }))
 	]);
 
-	const collectMethods = [
-		{
-			icon: 'email' as const,
-			title: 'Email after orders',
-			desc: 'Automatically ask customers for a review',
-			href: '/app/get-reviews#email'
-		},
-		{
-			icon: 'link' as const,
-			title: 'Share a link',
-			desc: 'Send your review link anywhere',
-			href: '/app/get-reviews#link'
-		},
-		{
-			icon: 'qr' as const,
-			title: 'QR code',
-			desc: 'Print or display in-store',
-			href: '/app/get-reviews#qr'
-		}
-	];
-
 	const columns = [
 		{ label: 'Reviewer' },
 		{ label: 'Rating' },
@@ -159,6 +138,9 @@
 </svelte:head>
 
 <Page title="Reviews">
+	{#snippet secondaryActions()}
+		<Button variant="secondary" href="/app/feedback/form">Edit feedback page</Button>
+	{/snippet}
 	{#snippet primaryAction()}
 		<Button variant="primary" href="/app/get-reviews">Get more reviews</Button>
 	{/snippet}
@@ -167,21 +149,7 @@
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}
 
-	<!-- Smart access: collect reviews -->
-	<Card title="Collect reviews">
-		<div class="collect-grid">
-			{#each collectMethods as m (m.href)}
-				<a class="collect-card" href={m.href}>
-					<span class="collect-icon"><Icon name={m.icon} /></span>
-					<span class="collect-body">
-						<Text variant="bodyMd">{m.title}</Text>
-						<Text tone="subdued" variant="bodySm">{m.desc}</Text>
-					</span>
-					<Icon name="chevron-right" tone="subdued" />
-				</a>
-			{/each}
-		</div>
-	</Card>
+	<CollectReviewsCard title="Smart actions" items={SMART_ACTIONS} columns={2} />
 
 	<div class="table-wrap">
 		<DataTableView
@@ -264,43 +232,6 @@
 </Page>
 
 <style>
-	.collect-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-		gap: var(--space-300);
-		margin-top: var(--space-300);
-	}
-	.collect-card {
-		display: flex;
-		align-items: center;
-		gap: var(--space-300);
-		padding: var(--space-300) var(--space-400);
-		border: 1px solid var(--color-border);
-		border-radius: var(--radius-lg, 12px);
-		text-decoration: none;
-		color: inherit;
-		transition: background 0.15s ease;
-	}
-	.collect-card:hover {
-		background: var(--color-bg-surface-hover, #f6f6f7);
-	}
-	.collect-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 8px;
-		background: var(--color-bg-surface-secondary, #f1f1f1);
-		color: var(--color-text, #1a1a1a);
-		flex-shrink: 0;
-	}
-	.collect-body {
-		flex: 1;
-		min-width: 0;
-		display: flex;
-		flex-direction: column;
-	}
 	.table-wrap {
 		margin-top: var(--space-400);
 	}

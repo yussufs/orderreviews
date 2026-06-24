@@ -23,6 +23,7 @@ import {
 	unique
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
+import { type FormContent, DEFAULT_FORM_CONTENT } from '../review-form-html';
 
 // =============================================================================
 // SESSION TABLE (Shopify OAuth)
@@ -282,6 +283,9 @@ export const reviewCollectionSettings = pgTable('review_collection_settings', {
 	fromName: text('from_name'),
 	subject: text('subject'),
 
+	// Customizable copy/layout for the hosted review form (editor at /app/feedback/form)
+	formContent: jsonb('form_content').$type<FormContent>().default(DEFAULT_FORM_CONTENT).notNull(),
+
 	createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull()
 });
@@ -356,9 +360,13 @@ export const feedbackSubmissions = pgTable(
 
 		shop: text('shop').notNull(),
 
-		reviewRequestId: text('review_request_id')
-			.notNull()
-			.references(() => reviewRequests.id, { onDelete: 'cascade' }),
+		// Null for standalone feedback from the shared link / QR form (no order).
+		reviewRequestId: text('review_request_id').references(() => reviewRequests.id, {
+			onDelete: 'cascade'
+		}),
+
+		// Where the feedback came from: a post-order email, or the shared link/QR form.
+		source: text('source').$type<'order' | 'link'>().default('order').notNull(),
 
 		rating: integer('rating').notNull(),
 		message: text('message'),

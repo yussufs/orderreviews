@@ -157,7 +157,10 @@
 	<title>Locations</title>
 </svelte:head>
 
-<Page title="Locations">
+<Page
+	title="Locations"
+	breadcrumbs={[{ label: 'Settings', href: '/app/settings' }, { label: 'Locations' }]}
+>
 	{#if error}
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}

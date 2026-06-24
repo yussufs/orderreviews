@@ -11,6 +11,7 @@ import {
 	type ReviewTrigger,
 	type RatingType
 } from '$lib/shared/db';
+import { type FormContent, DEFAULT_FORM_CONTENT } from '$lib/shared/review-form-html';
 import { eq, and, desc } from 'drizzle-orm';
 
 export type ReviewCollectionSettingsRow = typeof reviewCollectionSettings.$inferSelect;
@@ -31,6 +32,7 @@ export interface ReviewCollectionSettingsInput {
 	merchantEmail?: string | null;
 	fromName?: string | null;
 	subject?: string | null;
+	formContent?: FormContent;
 }
 
 /** Defaults mirror the column defaults; returned when a shop has no row yet. */
@@ -51,6 +53,7 @@ export function defaultSettings(shop: string): ReviewCollectionSettingsRow {
 		merchantEmail: null,
 		fromName: null,
 		subject: null,
+		formContent: DEFAULT_FORM_CONTENT,
 		createdAt: now,
 		updatedAt: now
 	};
@@ -155,10 +158,11 @@ export async function markResponded(
 	return { followupJobIds: current.followupJobIds ?? [] };
 }
 
-/** Record private below-threshold feedback. */
+/** Record private below-threshold feedback (from an order email or the shared link). */
 export async function recordFeedback(params: {
 	shop: string;
-	reviewRequestId: string;
+	reviewRequestId?: string | null;
+	source?: 'order' | 'link';
 	rating: number;
 	message?: string | null;
 	customerEmail?: string | null;
@@ -167,7 +171,8 @@ export async function recordFeedback(params: {
 		.insert(feedbackSubmissions)
 		.values({
 			shop: params.shop,
-			reviewRequestId: params.reviewRequestId,
+			reviewRequestId: params.reviewRequestId ?? null,
+			source: params.source ?? 'order',
 			rating: params.rating,
 			message: params.message ?? null,
 			customerEmail: params.customerEmail ?? null
@@ -181,6 +186,15 @@ export async function markFeedbackEmailed(id: string): Promise<void> {
 		.update(feedbackSubmissions)
 		.set({ emailedMerchant: true })
 		.where(eq(feedbackSubmissions.id, id));
+}
+
+/** Delete a feedback submission, scoped to the shop. Returns true if removed. */
+export async function deleteFeedback(shop: string, id: string): Promise<boolean> {
+	const result = await db
+		.delete(feedbackSubmissions)
+		.where(and(eq(feedbackSubmissions.id, id), eq(feedbackSubmissions.shop, shop)))
+		.returning({ id: feedbackSubmissions.id });
+	return result.length > 0;
 }
 
 /** Feedback inbox for the merchant UI, newest first. */

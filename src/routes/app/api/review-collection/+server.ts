@@ -54,7 +54,9 @@ export const PUT: RequestHandler = async ({ request }) => {
 		notifyMerchantOnLowRating: !!body.notifyMerchantOnLowRating,
 		merchantEmail: body.merchantEmail || null,
 		fromName: body.fromName || null,
-		subject: body.subject || null
+		subject: body.subject || null,
+		// Preserved when omitted (drizzle skips undefined); set by the form editor.
+		formContent: body.formContent
 	});
 	return json({ settings });
 };
