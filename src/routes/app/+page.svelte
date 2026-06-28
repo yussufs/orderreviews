@@ -22,6 +22,7 @@
 		widget: {
 			locationCount: number;
 			reviewsImported: number;
+			totalReviews: number;
 			avgRating: number;
 			lastRefresh: string | null;
 		};
@@ -47,6 +48,11 @@
 			text: string | null;
 			date: string | null;
 		}[];
+		reviewsSummary: {
+			newLast7Days: number;
+			newByStar: { stars: number; count: number }[];
+			growth: { day: string; total: number }[];
+		};
 	}
 
 	const COLLAPSE_KEY = 'or_setup_collapsed';
@@ -129,6 +135,23 @@
 
 	const maxDist = $derived(data ? Math.max(1, ...data.ratingDistribution.map((d) => d.count)) : 1);
 	const hasCollectionData = $derived(!!data && data.collection.sent > 0);
+
+	// Sparkline path for the reviews-growth trend (needs >= 2 daily snapshots).
+	function sparkline(points: { total: number }[]): { line: string; area: string } | null {
+		if (points.length < 2) return null;
+		const w = 100;
+		const h = 28;
+		const totals = points.map((p) => p.total);
+		const min = Math.min(...totals);
+		const range = Math.max(...totals) - min || 1;
+		const stepX = w / (points.length - 1);
+		const coords = points.map((p, i) => [i * stepX, h - ((p.total - min) / range) * h]);
+		const line = coords
+			.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`)
+			.join(' ');
+		return { line, area: `${line} L ${w} ${h} L 0 ${h} Z` };
+	}
+	const spark = $derived(data ? sparkline(data.reviewsSummary.growth) : null);
 </script>
 
 <svelte:head>
@@ -189,18 +212,18 @@
 
 		<!-- KPI cards -->
 		<div class="kpi-grid">
-			<Card title="Review widget">
+			<Card title="Reviews">
 				{#snippet actions()}
-					<Button variant="plain" href="/app/widget">Manage</Button>
+					<Button variant="plain" href="/app/reviews">View all</Button>
 				{/snippet}
 				<div class="stats">
 					<div class="stat">
-						<span class="stat-value">{data.widget.locationCount}</span>
-						<span class="stat-label">locations</span>
+						<span class="stat-value">{data.widget.totalReviews.toLocaleString()}</span>
+						<span class="stat-label">total reviews</span>
 					</div>
 					<div class="stat">
-						<span class="stat-value">{data.widget.reviewsImported}</span>
-						<span class="stat-label">reviews imported</span>
+						<span class="stat-value">+{data.reviewsSummary.newLast7Days}</span>
+						<span class="stat-label">new · 7 days</span>
 					</div>
 					<div class="stat">
 						<span class="stat-value"
@@ -209,7 +232,23 @@
 						<span class="stat-label">avg rating</span>
 					</div>
 				</div>
-				<Text tone="subdued">Last refresh: {formatDate(data.widget.lastRefresh)}</Text>
+
+				{#if spark}
+					<svg class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" aria-hidden="true">
+						<path d={spark.area} class="spark-area" />
+						<path d={spark.line} class="spark-line" />
+					</svg>
+				{:else}
+					<Text tone="subdued" variant="bodySm">
+						Growth trend appears as daily data is collected.
+					</Text>
+				{/if}
+
+				<div class="new-stars">
+					{#each data.reviewsSummary.newByStar as b (b.stars)}
+						<span class="new-star"><span class="ns-star">★</span>{b.stars} · {b.count}</span>
+					{/each}
+				</div>
 			</Card>
 
 			<Card title="Review collection">
@@ -428,6 +467,37 @@
 	}
 	.status-line {
 		margin-bottom: var(--space-300);
+	}
+	.spark {
+		width: 100%;
+		height: 44px;
+		display: block;
+		margin: var(--space-200) 0 var(--space-300);
+	}
+	.spark-line {
+		fill: none;
+		stroke: #16a34a;
+		stroke-width: 2;
+		vector-effect: non-scaling-stroke;
+		stroke-linejoin: round;
+	}
+	.spark-area {
+		fill: rgba(22, 163, 74, 0.12);
+		stroke: none;
+	}
+	.new-stars {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-200) var(--space-400);
+		font-size: 0.85rem;
+		color: var(--color-text-secondary, #4b5563);
+	}
+	.new-star {
+		white-space: nowrap;
+	}
+	.ns-star {
+		color: #fbbc04;
+		margin-right: 2px;
 	}
 	.stats {
 		display: flex;

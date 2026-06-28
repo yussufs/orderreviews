@@ -375,6 +375,7 @@
 
 	.review-content p {
 		margin: 0;
+		white-space: pre-line;
 	}
 
 	/* ============================================

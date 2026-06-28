@@ -423,6 +423,32 @@ export const jobStatus = pgTable(
 );
 
 // =============================================================================
+// REVIEW SNAPSHOTS TABLE (daily total review count, for the growth chart)
+// =============================================================================
+
+/**
+ * One row per shop per day recording the total imported review count. Written
+ * by the daily cron; powers the dashboard "reviews growth" trend.
+ */
+export const reviewSnapshots = pgTable(
+	'review_snapshots',
+	{
+		id: text('id')
+			.primaryKey()
+			.$defaultFn(() => crypto.randomUUID()),
+		shop: text('shop').notNull(),
+		// Calendar day, 'YYYY-MM-DD' (sorts lexicographically).
+		day: text('day').notNull(),
+		totalReviews: integer('total_reviews').notNull(),
+		createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull()
+	},
+	(table) => [
+		unique('review_snapshots_shop_day_uq').on(table.shop, table.day),
+		index('review_snapshots_shop_idx').on(table.shop)
+	]
+);
+
+// =============================================================================
 // RELATIONS
 // =============================================================================
 

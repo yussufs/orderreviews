@@ -10,6 +10,7 @@ import { ApifyClient } from 'apify-client';
 import { eq } from 'drizzle-orm';
 import { getWorkerDb } from '../db';
 import { locations, reviews, jobStatus } from '../../../shared/db/schema';
+import { cleanReviewText } from '../../../shared/text';
 import type { ReviewFetchPayload } from '../boss';
 
 /** Hard cap on reviews fetched per import (no per-plan limits in this app). */
@@ -85,7 +86,7 @@ export async function handleReviewFetch(data: ReviewFetchPayload): Promise<void>
 							reviewId,
 							shop,
 							placeId,
-							text: review.text as string | undefined,
+							text: cleanReviewText(review.text as string | undefined),
 							name: review.name as string | undefined,
 							stars: review.stars as number | undefined,
 							publishedAtDate: publishedAt,
@@ -98,7 +99,7 @@ export async function handleReviewFetch(data: ReviewFetchPayload): Promise<void>
 						.onConflictDoUpdate({
 							target: reviews.reviewId,
 							set: {
-								text: review.text as string | undefined,
+								text: cleanReviewText(review.text as string | undefined),
 								name: review.name as string | undefined,
 								stars: review.stars as number | undefined,
 								publishedAtDate: publishedAt,

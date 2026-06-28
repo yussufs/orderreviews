@@ -1,41 +1,92 @@
-# SvelteKit Shopify App Template
+# Order Reviews & Google Ratings
 
-This is a SvelteKit template for building embedded Shopify apps.
+An embedded Shopify app (built on a SvelteKit template) with **two features**:
+
+1. **Google Reviews display widget** — a theme app extension that shows a store's
+   imported Google reviews on the storefront (grid + carousel designs, global or
+   per-page placement). See [docs/WIDGET.md](docs/WIDGET.md).
+2. **Post-order review collection & feedback** — after an order is paid or
+   fulfilled, customers are emailed for a rating; happy customers are routed to
+   Google, unhappy ones to a private feedback form. Also reachable via a shared
+   link, QR code, and the widget's "Leave a Review" button.
+   See [docs/FEEDBACK.md](docs/FEEDBACK.md).
+
+Reviews are pulled in via the Google Places API (search) + an Apify actor
+(import), processed through a background queue.
+See [docs/IMPORTING_REVIEWS.md](docs/IMPORTING_REVIEWS.md).
 
 ## Project Overview
 
-- **Framework**: SvelteKit 2 with TypeScript
-- **Database**: PostgreSQL with Drizzle ORM
-- **API**: Shopify Admin GraphQL API
-- **Authentication**: Shopify OAuth with session tokens
-- **UI**: Custom Svelte components with App Bridge web components (see [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md))
+- **Framework**: SvelteKit 2 + TypeScript
+- **Database**: PostgreSQL + Drizzle ORM
+- **Background jobs**: pg-boss (Postgres-backed) + a standalone worker (`src/worker.ts`)
+- **Reviews**: Google Places API (search) + Apify actor `compass/crawler-google-places` (import)
+- **Email**: AWS SES (post-order request + follow-up + merchant notify)
+- **Auth**: Shopify OAuth with **expiring** offline tokens + App Bridge session tokens
+- **UI**: Custom Svelte components (not Polaris) — see [docs/CUSTOM_COMPONENTS.md](docs/CUSTOM_COMPONENTS.md)
+
+## Architecture
+
+- The **web app** (SvelteKit) serves merchant pages under `/app/*`, the API under
+  `/app/api/*`, webhooks under `/webhooks/*`, and storefront App Proxy endpoints
+  under `/proxy/*` (`/apps/order-reviews/*` on the storefront).
+- The **worker** (`pnpm worker`) consumes pg-boss queues: `review-fetch` (Apify
+  import), `feedback-email` / `followup-email` (SES), and `daily-refresh` (3am
+  cron: incremental refresh + daily review-count snapshot). It loads `.env` via
+  `dotenv/config` and is **not** started by the Shopify CLI — run it separately.
+- **Two DB layers**: `src/lib/shared/db/` is framework-agnostic (imported by both
+  the app and the worker); `src/lib/server/db/` is the SvelteKit-bound `db`. Code
+  shared with the worker (queue handlers, `email/ses.ts`, `tokens.ts`,
+  `review-form-html.ts`) MUST avoid `$lib`/`$env` and use `process.env`.
+  `hooks.server.ts` bridges `$env` → `process.env` so these work in the web
+  process too.
+- **All customer-facing review surfaces** are served on the merchant's storefront
+  via the App Proxy (`https://{shop}/apps/order-reviews/...`).
 
 ## Key Directories
 
 ```
-src/lib/server/shopify/   - Shopify API client and auth helpers
-src/lib/server/db/        - Database schema and connection
-src/lib/types/            - Generated GraphQL types
-src/routes/app/           - Protected app pages (require auth)
-src/routes/auth/          - OAuth flow handlers
-src/routes/webhooks/      - Shopify webhook handlers
+src/lib/server/shopify/    - Shopify API client + auth helpers
+src/lib/server/queue/      - pg-boss setup, enqueue helpers, worker handlers
+src/lib/server/services/   - DB-backed services (locations, reviews, review-collection, dashboard…)
+src/lib/server/email/      - AWS SES client + email templates
+src/lib/shared/db/         - Framework-agnostic Drizzle schema + connection (worker-safe)
+src/lib/shared/            - Worker-safe utils (review-form-html.ts, text.ts)
+src/lib/components/        - Custom Svelte UI components
+src/routes/app/            - Protected merchant pages (require auth)
+src/routes/app/api/        - Merchant API (session-token auth)
+src/routes/proxy/          - Storefront App Proxy endpoints (widget data + review forms)
+src/routes/webhooks/       - Shopify webhooks (orders, compliance, app lifecycle)
+widget/                    - Standalone Vite/Svelte storefront widget bundle
+extensions/order-reviews/  - Theme app extension (Liquid blocks + built widget.js)
+docs/                      - Feature docs (WIDGET, IMPORTING_REVIEWS, FEEDBACK, CUSTOM_COMPONENTS)
 ```
 
 ## Important Files
 
-- `hooks.server.ts` - Authentication middleware
-- `shopify.app.toml` - Shopify app configuration
-- `drizzle.config.ts` - Database configuration
-- `.graphqlrc.ts` - GraphQL codegen configuration
+- `src/worker.ts` - Standalone pg-boss worker (run with `pnpm worker`)
+- `src/hooks.server.ts` - Auth middleware + `$env` → `process.env` bridge
+- `src/lib/shared/db/schema.ts` - All Drizzle tables (single source of truth)
+- `src/lib/shared/review-form-html.ts` - The hosted review form renderer (server + editor preview)
+- `shopify.app.toml` - App config (scopes, webhooks, `[app_proxy]`)
+- `drizzle.config.ts` - Database / migration config
 
 ## Common Commands
 
 ```bash
-pnpm run dev              # Start dev server
-pnpm run db:push          # Push database schema
-pnpm run graphql-codegen  # Generate GraphQL types
-shopify app dev           # Start with Shopify CLI (recommended)
+pnpm run dev              # Start the web dev server (Vite)
+pnpm run worker           # Start the background worker (pg-boss); worker:dev to watch
+shopify app dev           # Start web + tunnel + extension (recommended)
+docker compose up -d      # Local PostgreSQL
+pnpm run db:generate      # Generate a Drizzle migration from schema.ts
+pnpm run db:migrate       # Apply migrations (preferred over db:push)
+pnpm run widget:build     # Build the storefront widget bundle into the extension
+pnpm run check            # svelte-check
+pnpm run format           # Prettier
 ```
+
+Typical dev setup runs **three** things: `shopify app dev` (web + tunnel),
+`pnpm worker` (jobs), and `docker compose up -d` (Postgres).
 
 ## MCP Servers
 

@@ -17,7 +17,8 @@ import {
 	reviews,
 	widgetSettings,
 	reviewRequests,
-	feedbackSubmissions
+	feedbackSubmissions,
+	reviewSnapshots
 } from '$lib/shared/db';
 import { eq, and, gte, sql, desc } from 'drizzle-orm';
 import { getSettings } from './review-collection';
@@ -30,6 +31,7 @@ export interface DashboardData {
 	widget: {
 		locationCount: number;
 		reviewsImported: number;
+		totalReviews: number;
 		avgRating: number;
 		lastRefresh: string | null;
 	};
@@ -55,15 +57,23 @@ export interface DashboardData {
 		text: string | null;
 		date: string | null;
 	}[];
+	reviewsSummary: {
+		newLast7Days: number;
+		newByStar: { stars: number; count: number }[];
+		growth: { day: string; total: number }[];
+	};
 }
 
 export async function getDashboard(shop: string, range: DashboardRange): Promise<DashboardData> {
 	const since = range === '30d' ? new Date(Date.now() - 30 * 86400 * 1000) : null;
 
 	// --- Widget stats (cumulative) ---
+	// totalReviews = the real Google-reported review count (we only import up to
+	// 200 rows per location, so count(*) on `reviews` would cap out).
 	const [loc] = await db
 		.select({
 			count: sql<number>`count(*)`,
+			totalReviews: sql<number>`coalesce(sum(${locations.reviewsCount}), 0)`,
 			avgScore: sql<number | null>`avg(${locations.totalScore})`,
 			lastRefresh: sql<Date | null>`max(${locations.lastReviewFetchAt})`
 		})
@@ -150,6 +160,25 @@ export async function getDashboard(shop: string, range: DashboardRange): Promise
 		.orderBy(desc(reviews.publishedAtDate))
 		.limit(5);
 
+	// --- Reviews summary: new in last 7 days (by star) + growth from snapshots ---
+	const since7 = new Date(Date.now() - 7 * 86400 * 1000);
+	const newRows = await db
+		.select({ stars: reviews.stars })
+		.from(reviews)
+		.where(and(eq(reviews.shop, shop), gte(reviews.publishedAtDate, since7)));
+	const newDist = [0, 0, 0, 0, 0];
+	for (const r of newRows) {
+		const s = Math.round(r.stars ?? 0);
+		if (s >= 1 && s <= 5) newDist[s - 1]++;
+	}
+
+	const since14 = new Date(Date.now() - 14 * 86400 * 1000).toISOString().slice(0, 10);
+	const snaps = await db
+		.select({ day: reviewSnapshots.day, total: reviewSnapshots.totalReviews })
+		.from(reviewSnapshots)
+		.where(and(eq(reviewSnapshots.shop, shop), gte(reviewSnapshots.day, since14)))
+		.orderBy(reviewSnapshots.day);
+
 	return {
 		range,
 		setup: {
@@ -160,6 +189,7 @@ export async function getDashboard(shop: string, range: DashboardRange): Promise
 		widget: {
 			locationCount: Number(loc?.count ?? 0),
 			reviewsImported: Number(rev?.count ?? 0),
+			totalReviews: Number(loc?.totalReviews ?? 0),
 			avgRating: loc?.avgScore ? Number(Number(loc.avgScore).toFixed(1)) : 0,
 			lastRefresh: loc?.lastRefresh ? new Date(loc.lastRefresh).toISOString() : null
 		},
@@ -189,6 +219,11 @@ export async function getDashboard(shop: string, range: DashboardRange): Promise
 			stars: r.stars,
 			text: r.text,
 			date: r.date ? r.date.toISOString() : null
-		}))
+		})),
+		reviewsSummary: {
+			newLast7Days: newRows.length,
+			newByStar: [5, 4, 3, 2, 1].map((stars) => ({ stars, count: newDist[stars - 1] })),
+			growth: snaps.map((s) => ({ day: s.day, total: Number(s.total) }))
+		}
 	};
 }

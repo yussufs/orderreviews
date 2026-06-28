@@ -101,8 +101,12 @@ export function renderReviewForm(cfg: ReviewFormConfig): string {
   h1 { font-size:24px; margin:0 0 12px; }
   p { color:#4b5563; line-height:1.6; margin:0 0 16px; }
   .stars { display:flex; justify-content:center; gap:6px; margin:12px 0 4px; }
-  .star { background:none; border:none; cursor:pointer; font-size:44px; line-height:1; color:#d1d5db; transition:color .1s ease; padding:0 2px; }
+  .star { background:none; border:none; cursor:pointer; color:#d1d5db; transition:color .1s ease; padding:0 2px; line-height:0; }
+  .star-svg { width:44px; height:44px; display:block; fill:currentColor; }
+  .star .p-fill { display:none; }
   .star.on { color:#fbbc04; }
+  .star.on .p-border { display:none; }
+  .star.on .p-fill { display:inline; }
   .thumbs { display:flex; gap:12px; justify-content:center; margin:16px 0; }
   .thumb { flex:1; max-width:180px; cursor:pointer; font:inherit; font-weight:600; padding:16px; border-radius:10px; border:1px solid #e5e7eb; background:#fff; }
   textarea, .email { width:100%; box-sizing:border-box; border:1px solid #d1d5db; border-radius:8px; padding:12px; font:inherit; margin-bottom:12px; }
@@ -137,7 +141,11 @@ export function renderReviewForm(cfg: ReviewFormConfig): string {
         });
       } else {
         html += '<div class="stars">';
-        for (var i = 1; i <= 5; i++) html += '<button class="star" data-r="' + i + '">★</button>';
+        for (var i = 1; i <= 5; i++) html += '<button class="star" data-r="' + i + '" aria-label="' + i + ' star' + (i === 1 ? '' : 's') + '">' +
+          '<svg class="star-svg" viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path class="p-border" d="m22 9.24-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28z"></path>' +
+          '<path class="p-fill" d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"></path>' +
+          '</svg></button>';
         html += '</div>';
         root.innerHTML = html;
         if (!preview) {

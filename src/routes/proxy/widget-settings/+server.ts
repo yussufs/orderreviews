@@ -10,7 +10,7 @@ import type { RequestHandler } from './$types';
 import { verifyProxySignature, getShopFromProxy } from '$lib/server/shopify/proxy';
 import { db } from '$lib/server/db';
 import { locations, jobStatus } from '$lib/shared/db';
-import { eq, and, or } from 'drizzle-orm';
+import { eq, and, or, gte } from 'drizzle-orm';
 import { getReviewsForWidget } from '$lib/server/services/reviews';
 import { getWidgetSettings } from '$lib/server/services/widget-settings';
 
@@ -69,34 +69,6 @@ export const GET: RequestHandler = async ({ url }) => {
 		where: eq(locations.placeId, targetPlaceId)
 	});
 
-	// If an import is in flight, report progress instead of partial data.
-	const pending = await db.query.jobStatus.findFirst({
-		where: and(
-			eq(jobStatus.entityId, targetPlaceId),
-			eq(jobStatus.type, 'fetch_reviews'),
-			or(eq(jobStatus.status, 'pending'), eq(jobStatus.status, 'processing'))
-		),
-		orderBy: (j, { desc }) => [desc(j.createdAt)]
-	});
-
-	if (pending) {
-		const result = pending.result as { reviewCount?: number; totalReviews?: number } | null;
-		return json({
-			success: true,
-			importing: true,
-			importProgress: pending.progress || 0,
-			importStatus: {
-				reviewCount: result?.reviewCount || 0,
-				totalReviews: result?.totalReviews || 0
-			},
-			reviewsLoading: true,
-			reviewData: [],
-			placeData: placeData(location ?? null),
-			displaySettings: {},
-			customCss: ''
-		});
-	}
-
 	const settings = await getWidgetSettings(shop);
 	const { reviews } = await getReviewsForWidget(targetPlaceId, widgetType);
 
@@ -109,6 +81,39 @@ export const GET: RequestHandler = async ({ url }) => {
 		reviewerPhoto: review.reviewerPhotoUrl,
 		images: review.reviewImageUrls
 	}));
+
+	// Show the "importing" splash ONLY on a first import (no reviews yet) and when
+	// the job is RECENT. A background refresh of an already-populated widget must
+	// not blank it, and a stale/orphaned job must never block the widget forever.
+	if (reviewData.length === 0) {
+		const recentSince = new Date(Date.now() - 15 * 60 * 1000);
+		const pending = await db.query.jobStatus.findFirst({
+			where: and(
+				eq(jobStatus.entityId, targetPlaceId),
+				eq(jobStatus.type, 'fetch_reviews'),
+				or(eq(jobStatus.status, 'pending'), eq(jobStatus.status, 'processing')),
+				gte(jobStatus.updatedAt, recentSince)
+			),
+			orderBy: (j, { desc }) => [desc(j.createdAt)]
+		});
+		if (pending) {
+			const result = pending.result as { reviewCount?: number; totalReviews?: number } | null;
+			return json({
+				success: true,
+				importing: true,
+				importProgress: pending.progress || 0,
+				importStatus: {
+					reviewCount: result?.reviewCount || 0,
+					totalReviews: result?.totalReviews || 0
+				},
+				reviewsLoading: true,
+				reviewData: [],
+				placeData: placeData(location ?? null),
+				displaySettings: {},
+				customCss: ''
+			});
+		}
+	}
 
 	return json({
 		success: true,
