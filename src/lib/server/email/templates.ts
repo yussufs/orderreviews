@@ -161,3 +161,30 @@ export function overLimitEmail(params: OverLimitEmailParams): { subject: string;
 	);
 	return { subject: `You've hit your free review email limit for ${store}`, html };
 }
+
+export interface ContactEmailParams {
+	shop: string;
+	name: string;
+	email: string;
+	subject: string;
+	message: string;
+}
+
+/** Internal support email built from the in-app contact form. */
+export function contactEmail(params: ContactEmailParams): { subject: string; html: string } {
+	const html = layout(
+		`
+		<h1 style="font-size:20px;margin:0 0 16px;">New support request</h1>
+		<div style="text-align:left;">
+			<p style="margin:0 0 8px;"><strong>Shop:</strong> ${escapeHtml(params.shop)}</p>
+			<p style="margin:0 0 8px;"><strong>Name:</strong> ${escapeHtml(params.name)}</p>
+			<p style="margin:0 0 8px;"><strong>Email:</strong> <a href="mailto:${escapeHtml(params.email)}">${escapeHtml(params.email)}</a></p>
+			<p style="margin:0 0 8px;"><strong>Topic:</strong> ${escapeHtml(params.subject)}</p>
+			<p style="margin:16px 0 4px;"><strong>Message:</strong></p>
+			<div style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;white-space:pre-wrap;">${escapeHtml(params.message)}</div>
+		</div>
+	`,
+		'Sent from the Order Reviews app support form.'
+	);
+	return { subject: `Support: ${params.subject} — ${params.shop}`, html };
+}

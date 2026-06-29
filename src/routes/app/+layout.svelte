@@ -48,6 +48,7 @@
 	<s-link href="/app/feedback">Feedback</s-link>
 	<s-link href="/app/widget">Widget</s-link>
 	<s-link href="/app/settings">Settings</s-link>
+	<s-link href="/app/support">Support</s-link>
 	<s-link href="/app/pricing">{isFree ? 'Upgrade' : 'Plan'}</s-link>
 	{#if data.dev}
 		<s-link href="/app/debug">Debug</s-link>

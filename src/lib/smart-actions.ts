@@ -45,5 +45,11 @@ export const SMART_ACTIONS: SmartAction[] = [
 		title: 'Edit feedback page',
 		desc: 'Customize the rating form text & layout',
 		href: '/app/feedback/form'
+	},
+	{
+		icon: 'email',
+		title: 'Get help',
+		desc: 'Contact support with any questions',
+		href: '/app/support'
 	}
 ];
