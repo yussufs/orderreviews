@@ -18,6 +18,7 @@
 	let content = $state<FormContent | null>(null);
 	let ratingType = $state<RatingType>('stars');
 	let threshold = $state(4);
+	let storeNameInput = $state('');
 
 	let isLoading = $state(true);
 	let isSaving = $state(false);
@@ -35,6 +36,7 @@
 			content = structuredClone(res.settings.formContent as FormContent);
 			ratingType = (res.settings.ratingType as RatingType) ?? 'stars';
 			threshold = (res.settings.threshold as number) ?? 4;
+			storeNameInput = (res.settings.storeName as string | null) ?? '';
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to load form';
 		} finally {
@@ -42,7 +44,7 @@
 		}
 	});
 
-	const storeName = $derived(
+	const derivedStoreName = $derived(
 		(data.shop || '')
 			.replace(/\.myshopify\.com$/, '')
 			.split(/[-_]/)
@@ -50,6 +52,7 @@
 			.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
 			.join(' ') || 'Your store'
 	);
+	const storeName = $derived(storeNameInput.trim() || derivedStoreName);
 
 	const previewHtml = $derived(
 		content
@@ -71,7 +74,7 @@
 			saved = false;
 			await apiFetch('/app/api/review-collection', {
 				method: 'PUT',
-				body: { ...settings, ratingType, formContent: content }
+				body: { ...settings, ratingType, storeName: storeNameInput.trim() || null, formContent: content }
 			});
 			saved = true;
 		} catch (err) {
@@ -116,6 +119,16 @@
 			<!-- Edit panel -->
 			<div class="panel">
 				<Card title="Layout">
+					<div class="fields" style="margin-bottom: var(--space-300)">
+						<TextField
+							label="Store name"
+							name="store-name"
+							value={storeNameInput}
+							placeholder={derivedStoreName}
+							helpText="Shown as the form title and wherever {'{store}'} appears. Defaults to your store’s name."
+							oninput={(e) => (storeNameInput = (e.target as HTMLInputElement).value)}
+						/>
+					</div>
 					<div class="seg">
 						<button
 							class="seg-btn"

@@ -32,6 +32,7 @@ export interface ReviewCollectionSettingsInput {
 	merchantEmail?: string | null;
 	fromName?: string | null;
 	subject?: string | null;
+	storeName?: string | null;
 	formContent?: FormContent;
 }
 
@@ -53,6 +54,7 @@ export function defaultSettings(shop: string): ReviewCollectionSettingsRow {
 		merchantEmail: null,
 		fromName: null,
 		subject: null,
+		storeName: null,
 		formContent: DEFAULT_FORM_CONTENT,
 		createdAt: now,
 		updatedAt: now

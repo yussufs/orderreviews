@@ -55,6 +55,7 @@ export const PUT: RequestHandler = async ({ request }) => {
 		merchantEmail: body.merchantEmail || null,
 		fromName: body.fromName || null,
 		subject: body.subject || null,
+		storeName: body.storeName?.trim() || null,
 		// Preserved when omitted (drizzle skips undefined); set by the form editor.
 		formContent: body.formContent
 	});

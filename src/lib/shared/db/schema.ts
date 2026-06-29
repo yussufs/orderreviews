@@ -283,6 +283,10 @@ export const reviewCollectionSettings = pgTable('review_collection_settings', {
 	fromName: text('from_name'),
 	subject: text('subject'),
 
+	// Display name shown on the hosted feedback form (and {store} placeholder).
+	// Null falls back to a name derived from the .myshopify.com subdomain.
+	storeName: text('store_name'),
+
 	// Customizable copy/layout for the hosted review form (editor at /app/feedback/form)
 	formContent: jsonb('form_content').$type<FormContent>().default(DEFAULT_FORM_CONTENT).notNull(),
 

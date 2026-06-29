@@ -1,0 +1,1 @@
+ALTER TABLE "review_collection_settings" ADD COLUMN "store_name" text;

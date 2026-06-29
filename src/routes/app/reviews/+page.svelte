@@ -8,7 +8,8 @@
 		Text,
 		Select,
 		DataTableView,
-		CollectReviewsCard
+		CollectReviewsCard,
+		Stars
 	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
 	import { SMART_ACTIONS } from '$lib/smart-actions';
@@ -125,9 +126,6 @@
 			year: 'numeric'
 		});
 	}
-	function stars(n: number | null): string {
-		return '★'.repeat(Math.max(0, Math.round(n ?? 0)));
-	}
 	function initial(name: string | null): string {
 		return (name?.trim()?.[0] ?? '?').toUpperCase();
 	}
@@ -210,7 +208,7 @@
 						</span>
 					</div>
 				</td>
-				<td><span class="stars">{stars(r.stars)}</span></td>
+				<td><Stars value={r.stars} /></td>
 				<td><span class="review-text">{r.text || '—'}</span></td>
 				<td>{formatDate(r.publishedAtDate)}</td>
 				<td>
@@ -259,10 +257,6 @@
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
-	}
-	.stars {
-		color: #fbbc04;
-		white-space: nowrap;
 	}
 	.review-text {
 		display: -webkit-box;

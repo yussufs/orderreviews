@@ -15,6 +15,7 @@ export { default as DataTable } from './DataTable.svelte';
 export { default as DataTableView } from './DataTableView.svelte';
 export { default as CollectReviewsCard } from './CollectReviewsCard.svelte';
 export { default as ConfirmDialog } from './ConfirmDialog.svelte';
+export { default as Stars } from './Stars.svelte';
 export { default as Badge } from './Badge.svelte';
 export { default as Banner } from './Banner.svelte';
 export { default as Spinner } from './Spinner.svelte';

@@ -9,7 +9,8 @@
 		Badge,
 		Text,
 		Spinner,
-		CollectReviewsCard
+		CollectReviewsCard,
+		Stars
 	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
 	import { SMART_ACTIONS } from '$lib/smart-actions';
@@ -129,9 +130,6 @@
 		if (!iso) return 'never';
 		return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 	}
-	function stars(n: number | null): string {
-		return '★'.repeat(Math.max(0, Math.round(n ?? 0)));
-	}
 
 	const maxDist = $derived(data ? Math.max(1, ...data.ratingDistribution.map((d) => d.count)) : 1);
 	const hasCollectionData = $derived(!!data && data.collection.sent > 0);
@@ -226,9 +224,12 @@
 						<span class="stat-label">new · 7 days</span>
 					</div>
 					<div class="stat">
-						<span class="stat-value"
-							>{data.widget.avgRating || '—'}{data.widget.avgRating ? '★' : ''}</span
-						>
+						<span class="stat-value">
+							{data.widget.avgRating || '—'}{#if data.widget.avgRating}<Stars
+									value={1}
+									size={20}
+								/>{/if}
+						</span>
 						<span class="stat-label">avg rating</span>
 					</div>
 				</div>
@@ -246,7 +247,7 @@
 
 				<div class="new-stars">
 					{#each data.reviewsSummary.newByStar as b (b.stars)}
-						<span class="new-star"><span class="ns-star">★</span>{b.stars} · {b.count}</span>
+						<span class="new-star"><Stars value={1} size={13} />{b.stars} · {b.count}</span>
 					{/each}
 				</div>
 			</Card>
@@ -270,9 +271,12 @@
 						<span class="stat-label">response rate</span>
 					</div>
 					<div class="stat">
-						<span class="stat-value"
-							>{data.collection.avgRating || '—'}{data.collection.avgRating ? '★' : ''}</span
-						>
+						<span class="stat-value">
+							{data.collection.avgRating || '—'}{#if data.collection.avgRating}<Stars
+									value={1}
+									size={20}
+								/>{/if}
+						</span>
 						<span class="stat-label">avg rating</span>
 					</div>
 				</div>
@@ -360,7 +364,7 @@
 				<ul class="rev-list">
 					{#each data.recentReviews as r (r.id)}
 						<li>
-							<span class="rev-stars">{stars(r.stars)}</span>
+							<span class="rev-stars"><Stars value={r.stars} size={15} /></span>
 							<span class="rev-body">
 								<span class="rev-name">{r.name ?? 'Anonymous'}</span>
 								<span class="rev-text">{r.text || '—'}</span>
@@ -493,11 +497,10 @@
 		color: var(--color-text-secondary, #4b5563);
 	}
 	.new-star {
+		display: inline-flex;
+		align-items: center;
+		gap: 3px;
 		white-space: nowrap;
-	}
-	.ns-star {
-		color: #fbbc04;
-		margin-right: 2px;
 	}
 	.stats {
 		display: flex;

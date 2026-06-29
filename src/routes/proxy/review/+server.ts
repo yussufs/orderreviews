@@ -44,7 +44,7 @@ export const GET: RequestHandler = async ({ url }) => {
 	const placeId = settings.placeId || (await getPrimaryPlaceId(shop));
 
 	const html = renderReviewForm({
-		storeName: storeName(shop),
+		storeName: settings.storeName || storeName(shop),
 		ratingType: settings.ratingType,
 		threshold: settings.threshold,
 		writeReviewUrl: placeId
@@ -80,7 +80,7 @@ export const POST: RequestHandler = async ({ request, url }) => {
 
 	if (settings.notifyMerchantOnLowRating && settings.merchantEmail) {
 		const { subject, html } = merchantNotifyEmail({
-			storeName: storeName(shop),
+			storeName: settings.storeName || storeName(shop),
 			rating,
 			message,
 			customerEmail

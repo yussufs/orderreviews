@@ -29,7 +29,7 @@ export async function handleFeedbackEmail(data: FeedbackEmailPayload): Promise<v
 	});
 	if (!settings || !settings.enabled) return;
 
-	const storeName = prettyStoreName(data.shop, settings.fromName);
+	const storeName = prettyStoreName(data.shop, settings.storeName || settings.fromName);
 	const ratingLinks = buildRatingLinks(req.id, settings.ratingType, data.shop);
 	const { subject, html } = feedbackRequestEmail({
 		storeName,

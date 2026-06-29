@@ -1,48 +1,55 @@
 {
-	"version": "7",
-	"dialect": "postgresql",
-	"entries": [
-		{
-			"idx": 0,
-			"version": "7",
-			"when": 1781152161824,
-			"tag": "0000_good_quentin_quire",
-			"breakpoints": true
-		},
-		{
-			"idx": 1,
-			"version": "7",
-			"when": 1781830996406,
-			"tag": "0001_bumpy_skullbuster",
-			"breakpoints": true
-		},
-		{
-			"idx": 2,
-			"version": "7",
-			"when": 1782167023831,
-			"tag": "0002_easy_excalibur",
-			"breakpoints": true
-		},
-		{
-			"idx": 3,
-			"version": "7",
-			"when": 1782339593135,
-			"tag": "0003_light_pride",
-			"breakpoints": true
-		},
-		{
-			"idx": 4,
-			"version": "7",
-			"when": 1782341797399,
-			"tag": "0004_medical_thena",
-			"breakpoints": true
-		},
-		{
-			"idx": 5,
-			"version": "7",
-			"when": 1782684702459,
-			"tag": "0005_overrated_marrow",
-			"breakpoints": true
-		}
-	]
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1781152161824,
+      "tag": "0000_good_quentin_quire",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781830996406,
+      "tag": "0001_bumpy_skullbuster",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1782167023831,
+      "tag": "0002_easy_excalibur",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1782339593135,
+      "tag": "0003_light_pride",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1782341797399,
+      "tag": "0004_medical_thena",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1782684702459,
+      "tag": "0005_overrated_marrow",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1782707399836,
+      "tag": "0006_blue_iron_fist",
+      "breakpoints": true
+    }
+  ]
 }

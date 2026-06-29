@@ -32,7 +32,7 @@ export async function handleFollowupEmail(data: FollowupEmailPayload): Promise<v
 	if (!settings || !settings.enabled || !settings.followupEnabled) return;
 	if ((req.followupsSent ?? 0) >= settings.maxFollowups) return;
 
-	const storeName = prettyStoreName(data.shop, settings.fromName);
+	const storeName = prettyStoreName(data.shop, settings.storeName || settings.fromName);
 	const ratingLinks = buildRatingLinks(req.id, settings.ratingType, data.shop);
 	const { subject, html } = feedbackRequestEmail({
 		storeName,
