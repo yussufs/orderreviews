@@ -9,10 +9,21 @@
 		Select,
 		DataTableView,
 		CollectReviewsCard,
+		ConfirmDialog,
 		Stars
 	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
 	import { SMART_ACTIONS } from '$lib/smart-actions';
+	import { goto } from '$app/navigation';
+	import type { PageData } from './$types';
+
+	let { data }: { data: PageData } = $props();
+	const isFree = $derived(data.plan === 'free');
+	let showPremiumDialog = $state(false);
+
+	function upgrade() {
+		goto('/app/pricing');
+	}
 
 	interface ReviewRow {
 		reviewId: string;
@@ -147,6 +158,16 @@
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}
 
+	{#if isFree}
+		<Banner tone="info" title="Showing & hiding reviews is a Premium feature">
+			On the Free plan your widget shows up to 10 reviews and you can't pick which ones are visible.
+			Upgrade to display all your reviews and control each one.
+			{#snippet actions()}
+				<Button variant="primary" onclick={upgrade}>Upgrade to Premium</Button>
+			{/snippet}
+		</Banner>
+	{/if}
+
 	<CollectReviewsCard title="Smart actions" items={SMART_ACTIONS} columns={2} />
 
 	<div class="table-wrap">
@@ -219,7 +240,7 @@
 						size="slim"
 						variant="secondary"
 						loading={busy[r.reviewId]}
-						onclick={() => toggle(r)}
+						onclick={() => (isFree ? (showPremiumDialog = true) : toggle(r))}
 					>
 						{r.hidden ? 'Show' : 'Hide'}
 					</Button>
@@ -228,6 +249,17 @@
 		</DataTableView>
 	</div>
 </Page>
+
+<ConfirmDialog
+	open={showPremiumDialog}
+	title="Showing & hiding reviews is a Premium feature"
+	message="On the Free plan your widget shows up to 10 reviews and you can't choose which ones are visible. Upgrade to Premium to control each review."
+	confirmLabel="Upgrade to Premium"
+	cancelLabel="Not now"
+	destructive={false}
+	onconfirm={upgrade}
+	oncancel={() => (showPremiumDialog = false)}
+/>
 
 <style>
 	.table-wrap {

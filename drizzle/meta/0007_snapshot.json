@@ -1,6 +1,6 @@
 {
-	"id": "3e95e98f-31ce-4977-be69-d5f260328a12",
-	"prevId": "1c5baeda-7956-464d-971c-0b69d70bb84d",
+	"id": "2808a637-6e5d-4442-9af9-7e30e13f1813",
+	"prevId": "3e95e98f-31ce-4977-be69-d5f260328a12",
 	"version": "7",
 	"dialect": "postgresql",
 	"tables": {
@@ -983,6 +983,43 @@
 					"primaryKey": false,
 					"notNull": false
 				},
+				"plan": {
+					"name": "plan",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "'free'"
+				},
+				"plan_interval": {
+					"name": "plan_interval",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"subscription_id": {
+					"name": "subscription_id",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"subscription_status": {
+					"name": "subscription_status",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"current_period_end": {
+					"name": "current_period_end",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"subscription_updated_at": {
+					"name": "subscription_updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false
+				},
 				"created_at": {
 					"name": "created_at",
 					"type": "timestamp",
@@ -1001,6 +1038,63 @@
 			"indexes": {},
 			"foreignKeys": {},
 			"compositePrimaryKeys": {},
+			"uniqueConstraints": {},
+			"policies": {},
+			"checkConstraints": {},
+			"isRLSEnabled": false
+		},
+		"public.shop_usage": {
+			"name": "shop_usage",
+			"schema": "",
+			"columns": {
+				"shop": {
+					"name": "shop",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"period": {
+					"name": "period",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": true
+				},
+				"emails_sent": {
+					"name": "emails_sent",
+					"type": "integer",
+					"primaryKey": false,
+					"notNull": true,
+					"default": 0
+				},
+				"over_limit_notified_at": {
+					"name": "over_limit_notified_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": false
+				},
+				"created_at": {
+					"name": "created_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				},
+				"updated_at": {
+					"name": "updated_at",
+					"type": "timestamp",
+					"primaryKey": false,
+					"notNull": true,
+					"default": "now()"
+				}
+			},
+			"indexes": {},
+			"foreignKeys": {},
+			"compositePrimaryKeys": {
+				"shop_usage_shop_period_pk": {
+					"name": "shop_usage_shop_period_pk",
+					"columns": ["shop", "period"]
+				}
+			},
 			"uniqueConstraints": {},
 			"policies": {},
 			"checkConstraints": {},

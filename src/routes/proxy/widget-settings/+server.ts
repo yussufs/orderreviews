@@ -13,6 +13,7 @@ import { locations, jobStatus } from '$lib/shared/db';
 import { eq, and, or, gte } from 'drizzle-orm';
 import { getReviewsForWidget } from '$lib/server/services/reviews';
 import { getWidgetSettings } from '$lib/server/services/widget-settings';
+import { getShopPlan } from '$lib/shared/billing/usage';
 
 function placeData(location: typeof locations.$inferSelect | null) {
 	if (!location) return null;
@@ -70,7 +71,9 @@ export const GET: RequestHandler = async ({ url }) => {
 	});
 
 	const settings = await getWidgetSettings(shop);
-	const { reviews } = await getReviewsForWidget(targetPlaceId, widgetType);
+	// Free shops display at most FREE_DISPLAY_CAP reviews in the widget.
+	const plan = await getShopPlan(db, shop);
+	const { reviews } = await getReviewsForWidget(targetPlaceId, widgetType, plan);
 
 	const reviewData = reviews.map((review) => ({
 		id: review.reviewId,

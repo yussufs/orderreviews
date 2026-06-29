@@ -20,7 +20,8 @@ import {
 	integer,
 	jsonb,
 	index,
-	unique
+	unique,
+	primaryKey
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { type FormContent, DEFAULT_FORM_CONTENT } from '../review-form-html';
@@ -88,9 +89,46 @@ export const shopPreferences = pgTable('shop_preferences', {
 	// Shopify App Installation GID (e.g., "gid://shopify/AppInstallation/833491665210")
 	appGid: text('app_gid'),
 
+	// Billing / pricing tier. Kept in sync from Shopify Managed Pricing via the
+	// app_subscriptions/update webhook (primary) + an app-open reconciliation query.
+	// This is the single source of truth all gating code (worker, proxy, API) reads.
+	plan: text('plan').$type<ShopPlan>().default('free').notNull(),
+	planInterval: text('plan_interval').$type<'monthly' | 'annual' | null>(),
+	subscriptionId: text('subscription_id'),
+	subscriptionStatus: text('subscription_status'),
+	currentPeriodEnd: timestamp('current_period_end', { mode: 'date' }),
+	subscriptionUpdatedAt: timestamp('subscription_updated_at', { mode: 'date' }),
+
 	createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull()
 });
+
+/** Pricing tier. 'free' is the default; 'premium' is the paid Managed Pricing plan. */
+export type ShopPlan = 'free' | 'premium';
+
+// =============================================================================
+// SHOP USAGE TABLE (per-shop, per-month metering for free-tier caps)
+// =============================================================================
+
+/**
+ * Per-shop, per-calendar-month usage counters that drive the free-tier email cap.
+ * Only INITIAL feedback request emails increment `emailsSent` (follow-ups are free).
+ * `overLimitNotifiedAt` makes the "you're over your free limit" merchant email
+ * fire at most once per month.
+ */
+export const shopUsage = pgTable(
+	'shop_usage',
+	{
+		shop: text('shop').notNull(),
+		// Calendar period as 'YYYY-MM' (UTC).
+		period: text('period').notNull(),
+		emailsSent: integer('emails_sent').default(0).notNull(),
+		overLimitNotifiedAt: timestamp('over_limit_notified_at', { mode: 'date' }),
+		createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
+		updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull()
+	},
+	(table) => [primaryKey({ columns: [table.shop, table.period] })]
+);
 
 // =============================================================================
 // LOCATIONS TABLE (Google Places)
@@ -298,7 +336,13 @@ export const reviewCollectionSettings = pgTable('review_collection_settings', {
 // REVIEW REQUESTS TABLE (one row per triggered order — PII-bearing)
 // =============================================================================
 
-export type ReviewRequestStatus = 'scheduled' | 'sent' | 'responded' | 'cancelled' | 'failed';
+export type ReviewRequestStatus =
+	| 'scheduled'
+	| 'sent'
+	| 'responded'
+	| 'cancelled'
+	| 'failed'
+	| 'capped';
 
 /**
  * Review requests - one per order that triggered the collection flow.

@@ -3,6 +3,8 @@ import type { RequestHandler } from './$types';
 import { authApi } from '$lib/server/api-auth';
 import { getReviewsForLocation, getAllReviewsForShop } from '$lib/server/services/locations';
 import { updateReviewVisibility } from '$lib/server/services/reviews';
+import { db } from '$lib/server/db';
+import { getShopPlan } from '$lib/shared/billing/usage';
 
 /**
  * GET /app/api/reviews — all reviews for the shop (for the reviews table).
@@ -32,6 +34,15 @@ export const PATCH: RequestHandler = async ({ request }) => {
 	}
 	if (!body.reviewId || typeof body.hidden !== 'boolean') {
 		return json({ error: 'reviewId and hidden are required' }, { status: 400 });
+	}
+
+	// Selecting which reviews to show/hide is a Premium feature.
+	const plan = await getShopPlan(db, auth.session.shop);
+	if (plan === 'free') {
+		return json(
+			{ error: 'Showing and hiding specific reviews is a Premium feature.' },
+			{ status: 403 }
+		);
 	}
 
 	const review = await updateReviewVisibility(auth.session.shop, body.reviewId, body.hidden);

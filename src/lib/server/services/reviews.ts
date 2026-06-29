@@ -3,7 +3,8 @@
  * storefront widget. SvelteKit-side (uses `$lib/server/db`).
  */
 import { db } from '$lib/server/db';
-import { reviews, locations, type ReviewFilters } from '$lib/shared/db';
+import { reviews, locations, type ReviewFilters, type ShopPlan } from '$lib/shared/db';
+import { FREE_DISPLAY_CAP } from '$lib/shared/billing/limits';
 import { eq, and, gte, desc, asc, sql } from 'drizzle-orm';
 
 export type Review = typeof reviews.$inferSelect;
@@ -93,17 +94,20 @@ export async function updateReviewVisibility(
 	return result[0] || null;
 }
 
-/** How many reviews a given widget style should fetch. */
-function widgetLimit(widgetType: string): number {
-	if (widgetType.includes('grid')) return 50;
-	if (widgetType.includes('carousel')) return 20;
-	return 20;
+/**
+ * How many reviews a given widget style should fetch. Free shops are capped to
+ * FREE_DISPLAY_CAP regardless of widget style.
+ */
+function widgetLimit(widgetType: string, plan: ShopPlan): number {
+	const base = widgetType.includes('grid') ? 50 : 20;
+	return plan === 'free' ? Math.min(base, FREE_DISPLAY_CAP) : base;
 }
 
 /** Get reviews + location formatted for storefront widget display. */
 export async function getReviewsForWidget(
 	placeId: string,
-	widgetType: string
+	widgetType: string,
+	plan: ShopPlan = 'premium'
 ): Promise<{ reviews: Review[]; location: Location | null }> {
 	const location = await db.query.locations.findFirst({
 		where: eq(locations.placeId, placeId)
@@ -116,6 +120,6 @@ export async function getReviewsForWidget(
 		filterKeywords: []
 	};
 
-	const reviewList = await getFilteredReviews(placeId, filters, widgetLimit(widgetType));
+	const reviewList = await getFilteredReviews(placeId, filters, widgetLimit(widgetType, plan));
 	return { reviews: reviewList, location };
 }

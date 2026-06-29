@@ -3,6 +3,8 @@
  * worker (feedback + follow-up emails) and by SvelteKit (merchant notification).
  *
  * Set EMAIL_DRYRUN=true in dev to log emails to the console instead of sending.
+ * If SES credentials are absent, sends also fall back to console logging (so dev
+ * works out of the box) rather than failing.
  */
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses';
 
@@ -42,24 +44,24 @@ function formatFrom(email: string, name?: string): string {
 
 export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult> {
 	const fromEmail = process.env.AWS_SES_FROM_EMAIL;
+	const credsMissing =
+		!fromEmail || !process.env.AWS_SES_ACCESS_KEY_ID || !process.env.AWS_SES_SECRET_ACCESS_KEY;
 
-	if (process.env.EMAIL_DRYRUN === 'true') {
+	// Console-log instead of sending when explicitly dry-running, or whenever SES
+	// isn't configured — so local dev (and the debug page) work without credentials.
+	if (process.env.EMAIL_DRYRUN === 'true' || credsMissing) {
+		if (credsMissing && process.env.EMAIL_DRYRUN !== 'true') {
+			console.warn('[email] AWS SES not configured — logging email to console instead of sending');
+		}
 		console.log('[email:dryrun] to=%s subject=%s', input.to, input.subject);
 		console.log('[email:dryrun] html:\n%s', input.html);
 		return { success: true, dryRun: true };
 	}
 
-	if (!fromEmail || !process.env.AWS_SES_ACCESS_KEY_ID || !process.env.AWS_SES_SECRET_ACCESS_KEY) {
-		console.error(
-			'[email] AWS SES is not configured (set AWS_SES_* env vars or EMAIL_DRYRUN=true)'
-		);
-		return { success: false, error: 'Email service not configured' };
-	}
-
 	try {
 		await client().send(
 			new SendEmailCommand({
-				Source: formatFrom(fromEmail, input.fromName),
+				Source: formatFrom(fromEmail as string, input.fromName),
 				Destination: { ToAddresses: [input.to] },
 				ReplyToAddresses: input.replyTo ? [input.replyTo] : undefined,
 				Message: {

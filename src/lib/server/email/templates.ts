@@ -41,7 +41,10 @@ export function escapeHtml(text: string): string {
 	return text.replace(/[&<>"']/g, (char) => map[char]);
 }
 
-function layout(bodyInner: string): string {
+function layout(
+	bodyInner: string,
+	footer = "You're receiving this because you placed an order. This is a one-off request."
+): string {
 	return `<!DOCTYPE html>
 <html>
 <body style="margin:0;padding:0;background:#f4f5f7;">
@@ -50,7 +53,7 @@ function layout(bodyInner: string): string {
 			${bodyInner}
 		</div>
 		<p style="text-align:center;color:#9ca3af;font-size:12px;margin-top:16px;">
-			You're receiving this because you placed an order. This is a one-off request.
+			${footer}
 		</p>
 	</div>
 </body>
@@ -128,4 +131,33 @@ export function merchantNotifyEmail(params: MerchantNotifyParams): {
 		</div>
 	`);
 	return { subject: `New feedback for ${store} (${params.rating}/5)`, html };
+}
+
+export interface OverLimitEmailParams {
+	storeName: string;
+	/** The free monthly email cap that was reached. */
+	cap: number;
+	/** Managed Pricing plan-selection URL (opened in a normal browser tab from email). */
+	upgradeUrl: string;
+}
+
+/**
+ * Sent to the merchant once per month when their free post-order review request
+ * emails run out. Account notification (not a customer order email), so it uses a
+ * neutral footer instead of the "you placed an order" one.
+ */
+export function overLimitEmail(params: OverLimitEmailParams): { subject: string; html: string } {
+	const store = escapeHtml(params.storeName);
+	const html = layout(
+		`
+		<h1 style="font-size:20px;margin:0 0 16px;">You've reached your free review request limit</h1>
+		<div style="text-align:left;">
+			<p style="margin:0 0 12px;">Your store <strong>${store}</strong> has sent all ${params.cap} free post-order review request emails for this month, so new requests are paused until next month. Follow-up reminders for orders already in progress will still go out.</p>
+			<p style="margin:0 0 16px;">Upgrade to Premium to send unlimited review requests and keep collecting reviews automatically.</p>
+		</div>
+		<a href="${params.upgradeUrl}" style="display:inline-block;text-decoration:none;background:#1a1a1a;color:#ffffff;font-weight:600;font-size:16px;padding:14px 28px;border-radius:8px;margin-top:8px;">Upgrade to Premium</a>
+	`,
+		`This is an account notification for ${store}.`
+	);
+	return { subject: `You've hit your free review email limit for ${store}`, html };
 }

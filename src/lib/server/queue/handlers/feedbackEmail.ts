@@ -4,11 +4,24 @@
  */
 import { eq } from 'drizzle-orm';
 import { getWorkerDb } from '../db';
-import { reviewRequests, reviewCollectionSettings } from '../../../shared/db/schema';
+import {
+	reviewRequests,
+	reviewCollectionSettings,
+	shopPreferences
+} from '../../../shared/db/schema';
 import { sendEmail } from '../../email/ses';
-import { feedbackRequestEmail } from '../../email/templates';
+import { feedbackRequestEmail, overLimitEmail } from '../../email/templates';
 import { enqueueFollowupEmail } from '../enqueue';
 import { buildRatingLinks, prettyStoreName } from './shared';
+import { FREE_EMAIL_CAP } from '../../../shared/billing/limits';
+import {
+	currentPeriod,
+	getShopPlan,
+	getUsage,
+	incrementEmailsSent,
+	markOverLimitNotified
+} from '../../../shared/billing/usage';
+import { appAdminUrl } from '../../../shared/billing/app-urls';
 import type { FeedbackEmailPayload } from '../boss';
 
 export async function handleFeedbackEmail(data: FeedbackEmailPayload): Promise<void> {
@@ -30,6 +43,42 @@ export async function handleFeedbackEmail(data: FeedbackEmailPayload): Promise<v
 	if (!settings || !settings.enabled) return;
 
 	const storeName = prettyStoreName(data.shop, settings.storeName || settings.fromName);
+
+	// Free-tier cap: at most FREE_EMAIL_CAP initial request emails per calendar
+	// month. Enforced at SEND time (the configurable delay can push a send into a
+	// later month, so the counter must reflect the actual send month). Follow-ups
+	// are unaffected — only this initial handler counts/caps.
+	const plan = await getShopPlan(db, data.shop);
+	if (plan === 'free') {
+		const period = currentPeriod();
+		const { emailsSent, overLimitNotifiedAt } = await getUsage(db, data.shop, period);
+		if (emailsSent >= FREE_EMAIL_CAP) {
+			await db
+				.update(reviewRequests)
+				.set({ status: 'capped', updatedAt: new Date() })
+				.where(eq(reviewRequests.id, req.id));
+
+			// Notify the merchant once per month that they've hit the free limit.
+			if (!overLimitNotifiedAt) {
+				const prefs = await db.query.shopPreferences.findFirst({
+					where: eq(shopPreferences.shop, data.shop)
+				});
+				const recipient = settings.merchantEmail || prefs?.email;
+				if (recipient) {
+					const { subject, html } = overLimitEmail({
+						storeName,
+						cap: FREE_EMAIL_CAP,
+						upgradeUrl: appAdminUrl(data.shop)
+					});
+					const notify = await sendEmail({ to: recipient, subject, html });
+					if (notify.success) await markOverLimitNotified(db, data.shop, period);
+				}
+			}
+
+			console.log(`[worker] feedback-email capped (free tier, ${period}) for ${req.id}`);
+			return;
+		}
+	}
 	const ratingLinks = buildRatingLinks(req.id, settings.ratingType, data.shop);
 	const { subject, html } = feedbackRequestEmail({
 		storeName,
@@ -50,6 +99,10 @@ export async function handleFeedbackEmail(data: FeedbackEmailPayload): Promise<v
 		.update(reviewRequests)
 		.set({ status: 'sent', sentAt: new Date(), updatedAt: new Date() })
 		.where(eq(reviewRequests.id, req.id));
+
+	// Count this initial send against the shop's monthly usage (powers the free cap
+	// + the in-app usage meter). Follow-ups never increment.
+	await incrementEmailsSent(db, data.shop, currentPeriod());
 
 	// Schedule the first follow-up reminder.
 	if (settings.followupEnabled && settings.maxFollowups > 0) {

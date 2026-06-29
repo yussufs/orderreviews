@@ -74,7 +74,12 @@
 			saved = false;
 			await apiFetch('/app/api/review-collection', {
 				method: 'PUT',
-				body: { ...settings, ratingType, storeName: storeNameInput.trim() || null, formContent: content }
+				body: {
+					...settings,
+					ratingType,
+					storeName: storeNameInput.trim() || null,
+					formContent: content
+				}
 			});
 			saved = true;
 		} catch (err) {
