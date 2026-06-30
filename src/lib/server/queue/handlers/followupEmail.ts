@@ -46,7 +46,8 @@ export async function handleFollowupEmail(data: FollowupEmailPayload): Promise<v
 		to: req.customerEmail,
 		subject,
 		html,
-		fromName: settings.fromName || undefined
+		// Sender name defaults to the store name when not explicitly set.
+		fromName: settings.fromName || storeName
 	});
 	if (!result.success) throw new Error(result.error || 'Failed to send follow-up email');
 

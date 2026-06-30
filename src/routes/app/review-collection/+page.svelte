@@ -36,12 +36,24 @@
 		title: string;
 	}
 
+	let { data }: { data: { shop?: string } } = $props();
+
 	let s = $state<Settings | null>(null);
 	let locations = $state<Location[]>([]);
 	let isLoading = $state(true);
 	let isSaving = $state(false);
 	let error = $state<string | null>(null);
 	let saved = $state(false);
+
+	// The store-name default used when no sender name is set (mirrors prettyStoreName).
+	const storeNameDefault = $derived(
+		(data.shop ?? '')
+			.replace(/\.myshopify\.com$/, '')
+			.split(/[-_]/)
+			.filter(Boolean)
+			.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+			.join(' ')
+	);
 
 	onMount(async () => {
 		try {
@@ -211,8 +223,9 @@
 				label="Sender name"
 				name="fromName"
 				value={s.fromName ?? ''}
+				placeholder={storeNameDefault}
 				oninput={(e) => (s!.fromName = (e.target as HTMLInputElement).value || null)}
-				helpText="Shown as the store name in the email."
+				helpText="Shown as the sender in the email. Defaults to your store name."
 			/>
 			<TextField
 				label="Email subject (optional)"
