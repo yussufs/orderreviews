@@ -20,11 +20,30 @@ interface OrderPayload {
 	admin_graphql_api_id?: string;
 	email?: string;
 	contact_email?: string;
+	// Legacy top-level marketing flag (still sent on order webhooks).
+	buyer_accepts_marketing?: boolean;
 	customer?: {
 		email?: string;
 		first_name?: string;
 		last_name?: string;
+		// Current consent model: state is 'subscribed' when the customer opted in.
+		email_marketing_consent?: {
+			state?: string;
+		} | null;
 	};
+}
+
+/**
+ * Whether the customer has consented to marketing email. We only send post-order
+ * review-request emails to customers who opted in, so we respect their consent
+ * decision (required to truthfully answer the Protected Customer Data
+ * questionnaire). Prefers the current `email_marketing_consent.state` and falls
+ * back to the legacy `buyer_accepts_marketing` flag.
+ */
+function customerConsented(payload: OrderPayload): boolean {
+	const state = payload.customer?.email_marketing_consent?.state;
+	if (state) return state === 'subscribed';
+	return payload.buyer_accepts_marketing === true;
 }
 
 export async function handleOrderTrigger(
@@ -42,6 +61,13 @@ export async function handleOrderTrigger(
 
 	if (!customerEmail || !orderId) {
 		console.log(`[webhook] ${topic} for ${shop}: missing email or order id, skipping`);
+		return;
+	}
+
+	// Respect the customer's marketing-consent decision — never email customers
+	// who haven't opted in.
+	if (!customerConsented(payload)) {
+		console.log(`[webhook] ${topic} for ${shop}: customer not consented, skipping ${orderId}`);
 		return;
 	}
 

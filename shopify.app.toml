@@ -3,12 +3,11 @@
 client_id = "67a6df181b123ee57dcbe70d7e840b54"
 name = "Order Reviews & Google Ratings"
 handle = "order-reviews-google-ratings"
-application_url = "https://shopify.dev/apps/default-app-home"
+application_url = "https://orderreviews.dragonapps.io"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
-include_config_on_deploy = true
 
 [webhooks]
 api_version = "2026-07"
@@ -48,9 +47,9 @@ use_legacy_install_flow = false
 # Storefront fetches https://{shop}/apps/order-reviews/widget-settings, proxied to /proxy/*
 # `shopify app dev` rewrites the URL's HOST to the dev tunnel but keeps the PATH,
 # so the path here must be exactly /proxy (-> our route /proxy/widget-settings).
-url = "https://shopify.dev/proxy"
+url = "https://orderreviews.dragonapps.io/proxy"
 subpath = "order-reviews"
 prefix = "apps"
 
 [auth]
-redirect_urls = [ "https://shopify.dev/apps/default-app-home/api/auth" ]
+redirect_urls = [ "https://orderreviews.dragonapps.io/api/auth" ]

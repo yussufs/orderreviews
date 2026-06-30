@@ -1,73 +1,44 @@
 # TODO
 
 Follow-ups from the Shopify Protected Customer Data data-protection questionnaire.
-None of these are implemented yet.
+**All four are now complete.**
 
-## 1. Skip non-consented customers in the order webhook
+## 1. Skip non-consented customers in the order webhook ✅ DONE
 
 **File:** `src/lib/server/webhooks/order-trigger.ts`
 
-Check the order/customer marketing-consent state (e.g. `buyer_accepts_marketing` /
-the customer's email marketing consent in the order payload) and **skip creating a
-review request** when the customer hasn't accepted marketing.
+`customerConsented()` checks the customer's marketing-consent state
+(`customer.email_marketing_consent.state === 'subscribed'`, falling back to the
+legacy `buyer_accepts_marketing` flag) and **skips creating a review request**
+when the customer hasn't opted in.
 
-Needed to truthfully answer **"respect customers' consent decisions = Yes"** on the
-questionnaire.
+Supports answering **"respect customers' consent decisions = Yes"**.
 
-## 2. Add a retention purge to the daily cron
+## 2. Add a retention purge to the daily cron ✅ DONE
 
-**File:** the `daily-refresh` cron handler (`src/lib/server/queue/handlers/dailyRefresh.ts`)
-or a new scheduled job.
+**File:** `src/lib/server/queue/handlers/dailyRefresh.ts`
 
-Purge old PII after a retention window — e.g. delete `review_requests` (and, via
-cascade, `feedback_submissions`) that are `responded`/`cancelled`/`failed` and older
-than ~90 days. PII is already deleted on `customers/redact` / `shop/redact`; this adds
-time-based retention.
+`purgeExpiredPii()` runs in the `daily-refresh` cron and hard-deletes
+`review_requests` older than `RETENTION_DAYS` (90) — cascading to their linked
+`feedback_submissions` — plus standalone link/QR `feedback_submissions` older
+than the same window. PII is also deleted on `customers/redact` / `shop/redact`.
 
-Lets us answer **"retention periods = Yes"**. Also state the retention period in the
-privacy policy.
+Supports answering **"retention periods = Yes"**. The 90-day window is stated in
+the privacy policy (#3).
 
-## 3. Write a proper privacy policy
+## 3. Privacy policy ✅ DONE
 
-Publish at a public URL; reference it in the Shopify app listing + questionnaire.
+Published at: https://dragonapps.io/order-reviews-privacy-policy/
+Reference this URL in the Shopify app listing + Protected Customer Data
+questionnaire. Keep the stated retention period aligned with #2 (90 days).
 
-Suggested contents:
+## 4. Security incident response policy ✅ DONE
 
-- **Who we are:** app name (Order Reviews & Google Ratings), legal entity, contact email.
-- **What personal data we process:** customer first/last name + email address, and order
-  id — obtained via Shopify `orders/paid` & `orders/fulfilled` webhooks. Note: the Google
-  Reviews widget uses publicly available Google review data, not Shopify customer data.
-- **Why (purpose & legal basis):** to send post-purchase review-request and follow-up
-  emails on behalf of the merchant; legal basis = legitimate interest / merchant
-  instruction, subject to customer marketing consent.
-- **Sub-processors:** AWS SES (email delivery), Apify (Google reviews import — no customer
-  PII), the hosting/Postgres provider. List each.
-- **Retention:** state the period (align with #2, e.g. deleted after 90 days, and on app
-  uninstall / GDPR redaction).
-- **Data subject rights:** access, deletion, opt-out; how to exercise (email + that we
-  honor Shopify `customers/redact`, `customers/data_request`, `shop/redact` webhooks).
-- **Security:** encryption in transit/at rest, access controls.
-- International transfers, cookies (embedded admin uses none), how we notify of changes.
-- **Effective date.**
+**File:** `docs/INCIDENT_RESPONSE.md`
 
-Keep it accurate — don't claim data we don't collect (no phone, no address).
+Internal 1–2 page policy: scope/definitions, roles, detection & reporting,
+response steps (contain → assess → eradicate/recover → document), notification
+(merchants, Shopify, 72-hour GDPR), and post-incident review.
 
-## 4. Write a security incident response policy
-
-Short (1–2 page) internal doc so we can answer **"security incident response policy = Yes"**.
-
-Suggested contents:
-
-- **Scope & definitions:** what counts as a security incident / personal-data breach
-  (unauthorized access, leak, loss of the Postgres DB or AWS/Apify credentials, etc.).
-- **Roles:** incident lead / contact (name + email).
-- **Detection & reporting:** how incidents are detected (host alerts, logs, error
-  monitoring) and the internal channel to report them.
-- **Response steps:** (1) contain — rotate leaked `SHOPIFY_API_SECRET` / DB / AWS / Apify
-  creds, revoke sessions; (2) assess scope & affected data/merchants; (3) eradicate &
-  recover from backups; (4) document the timeline.
-- **Notification:** notify affected merchants and, where required, Shopify and
-  data-protection authorities within **72 hours** of becoming aware (GDPR). Include
-  template wording.
-- **Post-incident:** root-cause review and remediation actions.
-- **Review cadence:** re-review at least annually.
+**Action:** fill in the `[NAME]` / `[EMAIL]` placeholders (incident lead +
+backup contact) before relying on it.

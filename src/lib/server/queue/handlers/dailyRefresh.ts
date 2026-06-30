@@ -3,10 +3,51 @@
  * import for every connected location. Framework-agnostic (worker process).
  */
 import { randomUUID } from 'crypto';
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, isNull, lt, sql } from 'drizzle-orm';
 import { getWorkerDb } from '../db';
-import { locations, jobStatus, reviewSnapshots } from '../../../shared/db/schema';
+import {
+	locations,
+	jobStatus,
+	reviewSnapshots,
+	reviewRequests,
+	feedbackSubmissions
+} from '../../../shared/db/schema';
 import { enqueueReviewFetch } from '../enqueue';
+
+/**
+ * Customer PII (review requests + private feedback) is hard-deleted after this
+ * many days. PII is also removed on `customers/redact` / `shop/redact`; this is
+ * the time-based retention limit. Keep in sync with the published privacy policy.
+ */
+const RETENTION_DAYS = 90;
+
+/**
+ * Purge customer PII older than the retention window. Deleting a review request
+ * cascades to its linked feedback; standalone link/QR feedback (no review
+ * request) is purged separately by its own age.
+ */
+async function purgeExpiredPii(db: ReturnType<typeof getWorkerDb>): Promise<void> {
+	const cutoff = new Date(Date.now() - RETENTION_DAYS * 86400 * 1000);
+
+	const purgedRequests = await db
+		.delete(reviewRequests)
+		.where(lt(reviewRequests.createdAt, cutoff))
+		.returning({ id: reviewRequests.id });
+
+	// Standalone feedback (no review_request to cascade from).
+	const purgedFeedback = await db
+		.delete(feedbackSubmissions)
+		.where(
+			and(isNull(feedbackSubmissions.reviewRequestId), lt(feedbackSubmissions.createdAt, cutoff))
+		)
+		.returning({ id: feedbackSubmissions.id });
+
+	if (purgedRequests.length || purgedFeedback.length) {
+		console.log(
+			`[worker] retention purge: removed ${purgedRequests.length} review request(s) and ${purgedFeedback.length} standalone feedback row(s) older than ${RETENTION_DAYS} days`
+		);
+	}
+}
 
 export async function handleDailyRefresh(): Promise<void> {
 	const db = getWorkerDb();
@@ -49,6 +90,9 @@ export async function handleDailyRefresh(): Promise<void> {
 				set: { totalReviews: Number(total) }
 			});
 	}
+
+	// Time-based PII retention (GDPR data minimization).
+	await purgeExpiredPii(db);
 
 	console.log(
 		`[worker] daily-refresh enqueued ${all.length} location(s), snapshotted ${shops.length} shop(s)`
