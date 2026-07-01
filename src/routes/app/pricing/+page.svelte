@@ -26,8 +26,11 @@
 				method: 'POST',
 				body: { interval }
 			});
-			// Break out of the embedded iframe to Shopify's approval page.
-			window.top!.location.href = confirmationUrl;
+			// Break out of the embedded iframe to Shopify's approval page. App Bridge
+			// intercepts open(url, '_top') and drives the top frame; assigning
+			// window.top.location directly is blocked cross-origin, which leaves the
+			// confirmation page framed and failing with ERR_BLOCKED_BY_RESPONSE.
+			window.open(confirmationUrl, '_top');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Could not start checkout';
 			busy = false;
