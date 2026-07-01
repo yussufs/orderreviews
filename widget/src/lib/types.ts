@@ -53,6 +53,9 @@ export interface ImportStatus {
 }
 
 export interface WidgetSettingsResponse {
+	/** Ownership gate: false when the shop hasn't verified it owns the business.
+	 *  Reviews are withheld; the widget shows an editor-only notice / nothing live. */
+	verified?: boolean;
 	/** Indicates if reviews are loading */
 	reviewsLoading: boolean;
 	/** Indicates if reviews are currently being imported */

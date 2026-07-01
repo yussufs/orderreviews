@@ -14,6 +14,12 @@
 	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
 	import { SMART_ACTIONS } from '$lib/smart-actions';
+	import { VERIFY_ACCOUNT_SUPPORT_URL } from '$lib/support-links';
+	import type { PageData } from './$types';
+
+	// Layout data (plan, shop, account verification). The dashboard payload below
+	// is fetched client-side into `data`, so the load data is aliased to `layout`.
+	let { data: layout }: { data: PageData } = $props();
 
 	const ONBOARDING_SKIP_KEY = 'or_onboarding_skipped';
 
@@ -159,6 +165,18 @@
 <Page title="Dashboard">
 	{#if error}
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
+	{/if}
+
+	{#if layout.verification?.needsVerification}
+		<div class="verify-banner">
+			<Banner tone="warning" title="Your account hasn't been verified">
+				Before your Google reviews can appear on your storefront, we need to verify that you own
+				this Google Business account. Your widget stays hidden on your live store until then.
+				{#snippet actions()}
+					<Button variant="primary" href={VERIFY_ACCOUNT_SUPPORT_URL}>Verify my account</Button>
+				{/snippet}
+			</Banner>
+		</div>
 	{/if}
 
 	{#if isLoading || redirecting || !data}
@@ -403,6 +421,9 @@
 </Page>
 
 <style>
+	.verify-banner {
+		margin-bottom: var(--space-400);
+	}
 	.centered {
 		display: flex;
 		justify-content: center;

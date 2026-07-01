@@ -6,6 +6,7 @@
  * the location, its reviews, and display settings as JSON for the widget bundle.
  */
 import { json, error } from '@sveltejs/kit';
+import { dev } from '$app/environment';
 import type { RequestHandler } from './$types';
 import { verifyProxySignature, getShopFromProxy } from '$lib/server/shopify/proxy';
 import { db } from '$lib/server/db';
@@ -14,6 +15,7 @@ import { eq, and, or, gte } from 'drizzle-orm';
 import { getReviewsForWidget } from '$lib/server/services/reviews';
 import { getWidgetSettings } from '$lib/server/services/widget-settings';
 import { getShopPlan } from '$lib/shared/billing/usage';
+import { getAccountVerification } from '$lib/server/services/verification';
 
 function placeData(location: typeof locations.$inferSelect | null) {
 	if (!location) return null;
@@ -36,9 +38,38 @@ export const GET: RequestHandler = async ({ url }) => {
 	if (url.searchParams.has('signature') && !verifyProxySignature(url.searchParams)) {
 		error(401, 'Invalid signature');
 	}
+	// After the guard, a present `signature` is guaranteed valid — i.e. the request
+	// genuinely came through Shopify's App Proxy (the HMAC needs the app secret and
+	// can't be forged). Used below to decide whether to trust `design_mode`.
+	const proxySigned = url.searchParams.has('signature');
 
 	const shop = getShopFromProxy(url.searchParams) || url.searchParams.get('myshopify_domain');
 	if (!shop) error(400, 'Shop parameter is required');
+
+	// Ownership gate. On the LIVE storefront an unverified shop gets no review data
+	// at all. In the theme editor the widget sets design_mode=true (only when
+	// Shopify.designMode is on) and we return the real widget data so the merchant
+	// can preview it and tune display settings — the widget renders a "needs
+	// verification" notice above it. `verified` is echoed so the widget knows which.
+	//
+	// design_mode is a client-supplied param, so we only trust it on a genuinely
+	// proxy-signed request (or in dev, where Shopify omits the signature). This
+	// stops anyone from unlocking an unverified shop's reviews by hand-crafting a
+	// direct request with ?design_mode=true and no valid App Proxy signature.
+	const designMode = url.searchParams.get('design_mode') === 'true' && (proxySigned || dev);
+	const verification = await getAccountVerification(shop);
+	if (verification.needsVerification && !designMode) {
+		return json({
+			success: true,
+			verified: false,
+			reviewsLoading: false,
+			importing: false,
+			reviewData: [],
+			placeData: null,
+			displaySettings: {},
+			customCss: ''
+		});
+	}
 
 	const widgetType = url.searchParams.get('widget_type') || 'order_reviews_grid';
 	const explicitPlaceId = url.searchParams.get('placeId');
@@ -104,6 +135,7 @@ export const GET: RequestHandler = async ({ url }) => {
 			return json({
 				success: true,
 				importing: true,
+				verified: verification.verified,
 				importProgress: pending.progress || 0,
 				importStatus: {
 					reviewCount: result?.reviewCount || 0,
@@ -120,6 +152,7 @@ export const GET: RequestHandler = async ({ url }) => {
 
 	return json({
 		success: true,
+		verified: verification.verified,
 		reviewsLoading: false,
 		importing: false,
 		reviewData,

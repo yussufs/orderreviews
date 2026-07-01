@@ -26,6 +26,8 @@
 	let placeData = $state<GLocation | null>(null);
 	let apiDisplaySettings = $state<DisplaySettings>({});
 	let apiCustomCss = $state('');
+	// Ownership gate: false when the shop hasn't verified business ownership.
+	let verified = $state(true);
 
 	// Track data source for change detection
 	let dataSource = $derived.by(() => {
@@ -110,13 +112,15 @@
 				endpoint: config.endpoint,
 				location: config.location,
 				myshopifyDomain: config.myshopifyDomain,
-				widgetType: config.widgetType
+				widgetType: config.widgetType,
+				designMode: isDesignMode
 			},
 			(data) => {
 				loading = data.loading;
 				importing = data.importing;
 				importProgress = data.importProgress;
 				importStatus = data.importStatus;
+				verified = data.verified !== false;
 				if (!data.loading) {
 					reviewData = data.reviewData;
 					placeData = data.placeData;
@@ -150,7 +154,20 @@
 	</style>`}
 {/if}
 
-{#if loading || importing}
+{#if !verified && isDesignMode}
+	<!-- Theme editor only: preview the real widget below, with a notice on top so the
+	     merchant knows it isn't live yet. Customers never see this (the live storefront
+	     doesn't request design_mode, so the server withholds the data entirely). -->
+	<div class="dragonio-verify-notice">
+		<strong>Preview only — not visible to customers yet.</strong>
+		This is how your reviews will look. Verify that you own your Google Business account in the
+		Order Reviews app to make the widget go live. Only you can see this notice.
+	</div>
+{/if}
+
+{#if !verified && !isDesignMode}
+	<!-- Live storefront, unverified: render nothing. -->
+{:else if loading || importing}
 	<div class="dragonio-status-card">
 		<div class="dragonio-spinner"></div>
 		<p class="dragonio-status-text">
@@ -189,6 +206,28 @@
 {/if}
 
 <style>
+	.dragonio-verify-notice {
+		font-family:
+			'Noto Sans',
+			-apple-system,
+			BlinkMacSystemFont,
+			'Segoe UI',
+			Roboto,
+			sans-serif;
+		font-size: 14px;
+		line-height: 1.5;
+		color: #7a5c00;
+		background: #fff8e1;
+		border: 1px solid #ffe08a;
+		border-radius: 10px;
+		padding: 12px 16px;
+		margin-bottom: 16px;
+	}
+	.dragonio-verify-notice strong {
+		display: block;
+		margin-bottom: 2px;
+		color: #6b4f00;
+	}
 	.dragonio-status-card {
 		display: flex;
 		flex-direction: column;

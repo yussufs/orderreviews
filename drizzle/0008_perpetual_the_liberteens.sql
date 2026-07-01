@@ -1,0 +1,1 @@
+ALTER TABLE "shop_preferences" ADD COLUMN "location_verified" boolean DEFAULT false NOT NULL;

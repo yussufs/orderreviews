@@ -2,6 +2,7 @@ import type { LayoutServerLoad } from './$types';
 import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { loadPlanContext } from '$lib/server/services/billing';
+import { getAccountVerification } from '$lib/server/services/verification';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const shop = locals.shopify?.session?.shop || url.searchParams.get('shop') || '';
@@ -17,12 +18,19 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 				usage: { emailsSent: 0, cap: 10, overLimit: false }
 			};
 
+	// Account-level ownership verification, so any merchant page can prompt the
+	// merchant to verify (home / widget banners, onboarding notice).
+	const verification = shop
+		? await getAccountVerification(shop)
+		: { required: false, verified: true, needsVerification: false };
+
 	return {
 		apiKey: env.SHOPIFY_API_KEY,
 		shop,
 		plan,
 		planInterval,
 		usage,
+		verification,
 		dev
 	};
 };

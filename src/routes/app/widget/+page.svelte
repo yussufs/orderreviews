@@ -15,6 +15,7 @@
 	import { apiFetch } from '$lib/client/api';
 	import { addAppBlockUrl, activateAppEmbedUrl, openAdminLink } from '$lib/admin-links';
 	import { SMART_ACTIONS } from '$lib/smart-actions';
+	import { VERIFY_ACCOUNT_SUPPORT_URL } from '$lib/support-links';
 
 	let { data }: { data: PageData } = $props();
 
@@ -128,6 +129,18 @@
 		<Banner tone="critical" title="Something went wrong">{error}</Banner>
 	{/if}
 
+	{#if data.verification?.needsVerification}
+		<div class="verify-banner">
+			<Banner tone="warning" title="Verify your account to go live">
+				This location needs to be verified before it appears on your storefront. Verify that you own
+				your Google Business account and your reviews will show on your live store.
+				{#snippet actions()}
+					<Button variant="primary" href={VERIFY_ACCOUNT_SUPPORT_URL}>Verify my account</Button>
+				{/snippet}
+			</Banner>
+		</div>
+	{/if}
+
 	{#if isLoading}
 		<Card><div class="centered"><Spinner /></div></Card>
 	{:else if locations.length === 0}
@@ -203,6 +216,9 @@
 </Page>
 
 <style>
+	.verify-banner {
+		margin-bottom: var(--space-400);
+	}
 	.row {
 		margin-top: var(--space-400);
 	}

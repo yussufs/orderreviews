@@ -99,6 +99,12 @@ export const shopPreferences = pgTable('shop_preferences', {
 	currentPeriodEnd: timestamp('current_period_end', { mode: 'date' }),
 	subscriptionUpdatedAt: timestamp('subscription_updated_at', { mode: 'date' }),
 
+	// Account-level ownership verification. False until the merchant proves they
+	// own the Google Business they imported. When the REQUIRE_LOCATION_VERIFICATION
+	// gate is on, an unverified shop's reviews are never shown on the storefront.
+	// See src/lib/server/services/verification.ts.
+	locationVerified: boolean('location_verified').default(false).notNull(),
+
 	createdAt: timestamp('created_at', { mode: 'date' }).defaultNow().notNull(),
 	updatedAt: timestamp('updated_at', { mode: 'date' }).defaultNow().notNull()
 });

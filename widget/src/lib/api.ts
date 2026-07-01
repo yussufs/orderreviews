@@ -18,7 +18,12 @@ const AVATAR_SIZE = 128;
 
 const DEFAULT_ENDPOINT = '/apps/order-reviews/widget-settings';
 const POLLING_INTERVAL = 2000;
-const CACHE_PREFIX = 'order_reviews_';
+// Bumped to v2 with the ownership-verification gate: the instant cache fast-path
+// renders before the server confirms `verified`, so any pre-gate cached reviews
+// (written by the old widget) could briefly flash on the live storefront of a
+// now-unverified shop. Versioning the prefix orphans those stale entries. v2 caches
+// are only ever written for verified shops (see the guard in fetchFreshData).
+const CACHE_PREFIX = 'order_reviews_v2_';
 
 /**
  * Cache data structure
@@ -117,6 +122,7 @@ export async function fetchWidgetSettings(config: {
 	location?: number;
 	myshopifyDomain?: string;
 	widgetType?: string;
+	designMode?: boolean;
 }): Promise<WidgetSettingsResponse> {
 	const endpoint = config.endpoint || DEFAULT_ENDPOINT;
 
@@ -125,6 +131,10 @@ export async function fetchWidgetSettings(config: {
 		myshopify_domain: config.myshopifyDomain || '',
 		widget_type: config.widgetType || ''
 	});
+	// In the theme editor we ask the server for the real widget data even when the
+	// shop is unverified, so the merchant can preview and tune it. The live
+	// storefront never sends this, so unverified reviews stay hidden there.
+	if (config.designMode) params.set('design_mode', 'true');
 
 	const urlWithParams = `${endpoint}?${params.toString()}`;
 
@@ -153,6 +163,7 @@ export function pollForWidgetData(
 		location?: number;
 		myshopifyDomain?: string;
 		widgetType?: string;
+		designMode?: boolean;
 	},
 	onData: (data: {
 		loading: boolean;
@@ -163,6 +174,8 @@ export function pollForWidgetData(
 		placeData: GLocation;
 		displaySettings: DisplaySettings;
 		customCss: string;
+		/** false when the shop hasn't verified business ownership (reviews withheld). */
+		verified?: boolean;
 	}) => void,
 	onError: (error: Error) => void
 ): () => void {
@@ -197,6 +210,13 @@ export function pollForWidgetData(
 		try {
 			const data = await fetchWidgetSettings(config);
 
+			// Ownership gate. `verified === false` means the shop hasn't verified
+			// business ownership. On the live storefront the server already withheld
+			// all data; in the theme editor it sends the real data so the merchant can
+			// preview it, and the router shows a "needs verification" notice above.
+			// The flag is threaded through every onData below so the router can react.
+			const verified = data.verified;
+
 			// Check if reviews are being imported (no reviews yet, task in progress)
 			if (data.importing) {
 				const placeData = Array.isArray(data.placeData) ? data.placeData[0] : data.placeData;
@@ -208,7 +228,8 @@ export function pollForWidgetData(
 					reviewData: [],
 					placeData: placeData || DummyLocations[0],
 					displaySettings: data.displaySettings || {},
-					customCss: data.customCss || ''
+					customCss: data.customCss || '',
+					verified
 				});
 
 				// Keep polling until import is complete
@@ -228,7 +249,8 @@ export function pollForWidgetData(
 						reviewData: [],
 						placeData: DummyLocations[0],
 						displaySettings: {},
-						customCss: ''
+						customCss: '',
+						verified
 					});
 				}
 
@@ -242,13 +264,17 @@ export function pollForWidgetData(
 			const reviewData = enrichReviews(data.reviewData);
 			const placeData = Array.isArray(data.placeData) ? data.placeData[0] : data.placeData;
 
-			// Cache the data
-			setCachedData(myshopifyDomain, location, {
-				reviewData,
-				placeData,
-				displaySettings: data.displaySettings,
-				customCss: data.customCss
-			});
+			// Cache the data — but never for an unverified shop. Its reviews are only
+			// fetched in the theme editor (design mode); caching them could flash them
+			// onto the live storefront in the same browser session via the cache path.
+			if (verified !== false) {
+				setCachedData(myshopifyDomain, location, {
+					reviewData,
+					placeData,
+					displaySettings: data.displaySettings,
+					customCss: data.customCss
+				});
+			}
 
 			onData({
 				loading: false,
@@ -257,7 +283,8 @@ export function pollForWidgetData(
 				reviewData,
 				placeData,
 				displaySettings: data.displaySettings,
-				customCss: data.customCss
+				customCss: data.customCss,
+				verified
 			});
 		} catch (error) {
 			onError(error instanceof Error ? error : new Error(String(error)));

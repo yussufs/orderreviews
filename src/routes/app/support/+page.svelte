@@ -1,11 +1,15 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { Page, Card, Button, Banner, TextField, Select, Text, Icon } from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
 
+	// Prefill subject/message from the URL (e.g. "Verify my account" CTAs link here).
+	const params = page.url.searchParams;
+
 	let name = $state('');
 	let email = $state('');
-	let subject = $state('');
-	let message = $state('');
+	let subject = $state(params.get('subject') ?? '');
+	let message = $state(params.get('message') ?? '');
 
 	let submitting = $state(false);
 	let error = $state<string | null>(null);
@@ -16,6 +20,7 @@
 		{ value: 'Widget & display', label: 'Widget & display' },
 		{ value: 'Review collection & emails', label: 'Review collection & emails' },
 		{ value: 'Importing reviews', label: 'Importing reviews' },
+		{ value: 'Location verification', label: 'Location verification' },
 		{ value: 'Billing & plans', label: 'Billing & plans' },
 		{ value: 'Other', label: 'Other' }
 	];

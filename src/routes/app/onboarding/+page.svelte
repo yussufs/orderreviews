@@ -11,6 +11,7 @@
 		Button,
 		Spinner,
 		Badge,
+		Banner,
 		Icon
 	} from '$lib/components';
 	import { apiFetch } from '$lib/client/api';
@@ -240,6 +241,15 @@
 	<div class="progress-track"><div class="progress-fill" style="width:{progress}%"></div></div>
 
 	{#if step === 1}
+		{#if data.verification?.required}
+			<div class="verify-notice">
+				<Banner tone="info" title="You'll need to verify this business">
+					After you add your Google business, we verify that you own it before your reviews appear
+					on your storefront. You can finish setup now — we'll prompt you to verify from your
+					dashboard.
+				</Banner>
+			</div>
+		{/if}
 		<Card title="Find your Google business">
 			<Text tone="subdued">
 				Search for your business by name and city (or full address), then select it to import your
@@ -457,6 +467,9 @@
 		height: 100%;
 		background: var(--color-bg-fill-info, #1a73e8);
 		transition: width 0.3s ease;
+	}
+	.verify-notice {
+		margin-bottom: var(--space-400);
 	}
 	.search-form {
 		display: flex;
