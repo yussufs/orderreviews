@@ -85,8 +85,8 @@ export async function handleOrderTrigger(
 		customerEmail,
 		customerName: customerName || null,
 		scheduledFor,
-		// Capture the live app URL (CLI-injected tunnel in dev) so the worker can
-		// build feedback links without a hand-set APP_URL.
+		// Capture the live app URL (CLI-injected tunnel in dev, SHOPIFY_APP_URL in
+		// production) so the worker can build feedback links.
 		appBaseUrl: resolveAppBaseUrl()
 	});
 

@@ -19,13 +19,27 @@ function getAppUrl(): string {
 }
 
 /**
- * Resolve the app's public base URL without throwing. Prefers an explicit
- * APP_URL override, then the CLI-injected SHOPIFY_APP_URL / HOST (set during
+ * Resolve the app's public base URL without throwing. Prefers the deployed
+ * SHOPIFY_APP_URL, falling back to the CLI-injected HOST (set during
  * `shopify app dev`). Used to capture the current tunnel URL on each order so
- * the worker can build feedback-email links without a hand-set APP_URL in dev.
+ * the worker can build feedback-email links without a hand-set URL in dev.
+ *
+ * Normalizes the value into a valid absolute origin: some hosts inject `HOST`
+ * (and occasionally `SHOPIFY_APP_URL`) as a bare hostname with no scheme, which
+ * produces an invalid URL when composed into a return/callback link (e.g. the
+ * Billing API rejects it with "Variable $returnUrl of type URL! was provided
+ * invalid value"). Returns `null` if no usable value is configured.
  */
 export function resolveAppBaseUrl(): string | null {
-	return env.APP_URL || env.SHOPIFY_APP_URL || env.HOST || null;
+	const raw = (env.SHOPIFY_APP_URL || env.HOST || '').trim();
+	if (!raw) return null;
+	const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+	try {
+		// Collapse to a clean origin (scheme + host[:port]) and drop any trailing slash.
+		return new URL(withScheme).origin;
+	} catch {
+		return null;
+	}
 }
 
 let sessionStorageInstance: DrizzleSessionStorage | null = null;

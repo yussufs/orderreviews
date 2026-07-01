@@ -365,8 +365,8 @@ export const reviewRequests = pgTable(
 		customerName: text('customer_name'),
 
 		// App public base URL captured when the order came in (the live tunnel in
-		// dev). The worker builds feedback links from this so no APP_URL is needed
-		// in dev; APP_URL env overrides it when set (production).
+		// dev, SHOPIFY_APP_URL in production). The worker builds feedback links
+		// from this so no URL needs to be hand-set in dev.
 		appBaseUrl: text('app_base_url'),
 
 		status: text('status').$type<ReviewRequestStatus>().default('scheduled').notNull(),
