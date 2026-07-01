@@ -10,6 +10,9 @@
 
 	const isFree = $derived(data.plan === 'free');
 	const overLimit = $derived(isFree && data.usage?.overLimit);
+	// Hold the informational Free-plan banner until the merchant has onboarded
+	// (connected a location) so it doesn't greet a brand-new / mid-setup shop.
+	const showFreeBanner = $derived(isFree && data.hasLocation);
 
 	function upgrade() {
 		goto('/app/pricing');
@@ -66,7 +69,7 @@
 				{/snippet}
 			</Banner>
 		</div>
-	{:else if isFree}
+	{:else if showFreeBanner}
 		<div class="plan-banner">
 			<Banner title="You're on the Free plan" tone="info">
 				Free includes {data.usage.cap} review request emails/month and up to 10 displayed reviews. You've

@@ -3,6 +3,7 @@ import { env } from '$env/dynamic/private';
 import { dev } from '$app/environment';
 import { loadPlanContext } from '$lib/server/services/billing';
 import { getAccountVerification } from '$lib/server/services/verification';
+import { getPrimaryPlaceId } from '$lib/server/services/locations';
 
 export const load: LayoutServerLoad = async ({ locals, url }) => {
 	const shop = locals.shopify?.session?.shop || url.searchParams.get('shop') || '';
@@ -24,6 +25,11 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		? await getAccountVerification(shop)
 		: { required: false, verified: true, needsVerification: false };
 
+	// Whether the merchant has connected a location yet — the app's definition of
+	// "onboarded" (a shop with none is sent to the onboarding wizard). Used to hold
+	// back plan/usage banners until the merchant has actually set the app up.
+	const hasLocation = shop ? !!(await getPrimaryPlaceId(shop)) : false;
+
 	return {
 		apiKey: env.SHOPIFY_API_KEY,
 		shop,
@@ -31,6 +37,7 @@ export const load: LayoutServerLoad = async ({ locals, url }) => {
 		planInterval,
 		usage,
 		verification,
+		hasLocation,
 		dev
 	};
 };
